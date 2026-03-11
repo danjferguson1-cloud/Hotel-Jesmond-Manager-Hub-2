@@ -419,6 +419,36 @@
         letter-spacing: 1px;
     }
 
+    .log-entry.completed .log-text {
+        text-decoration: line-through;
+        opacity: 0.5;
+    }
+    .log-entry.completed {
+        background: rgba(16, 185, 129, 0.06);
+        border-left: 3px solid #10B981;
+    }
+    .log-complete {
+        background: none;
+        border: 1.5px solid rgba(255,255,255,0.15);
+        border-radius: 7px;
+        width: 26px;
+        height: 26px;
+        flex-shrink: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        transition: all 0.2s;
+        margin-right: 4px;
+        color: transparent;
+    }
+    .log-entry.completed .log-complete {
+        background: #10B981;
+        border-color: #10B981;
+        color: white;
+    }
+
     .log-staff {
         font-size: 9px;
         font-weight: 500;
@@ -616,6 +646,11 @@
     }
     #clear-log-btn:active { color: var(--alert); }
 
+    @keyframes screenFlash {
+        0% { opacity: 0.85; }
+        100% { opacity: 0; }
+    }
+
     /* ===== ANIMATIONS ===== */
     @keyframes fade-up {
         from { opacity: 0; transform: translateY(14px); }
@@ -776,11 +811,47 @@
 </div>
 
 <script>
-    const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+    // ===== ALERT SYSTEM =====
+    const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
+    alertSound.volume = 1.0;
     let hasNotifiedToday = false;
     let isTesting = false;
+    let lastRepeatMinute = -1;
 
-    const tasks = ['safe', 'cellar', 'vibe', 'sec', 'safe2'];
+    function flashScreen() {
+        const flash = document.createElement('div');
+        flash.style.cssText = `
+            position: fixed; inset: 0; background: #E11D48;
+            z-index: 99998; pointer-events: none;
+            animation: screenFlash 0.6s ease forwards;
+        `;
+        document.body.appendChild(flash);
+        setTimeout(() => flash.remove(), 600);
+    }
+
+    function triggerAlertEffects() {
+        // Louder alarm sound
+        alertSound.currentTime = 0;
+        alertSound.play().catch(() => {});
+
+        // Push notification
+        if (Notification.permission === "granted") {
+            new Notification("🚨 Hotel Jesmond: Vibe Check!", {
+                body: "Time to adjust lights and audio! Tap to open.",
+                requireInteraction: true,
+            });
+        }
+
+        // Strong repeating vibration pattern
+        if ("vibrate" in navigator) {
+            navigator.vibrate([300, 100, 300, 100, 300, 200, 500]);
+        }
+
+        // Full screen flash
+        flashScreen();
+        setTimeout(flashScreen, 800);
+        setTimeout(flashScreen, 1600);
+    }
 
     function updateProgress() {
         const done = tasks.filter(k => document.getElementById('c-' + k).checked).length;
@@ -838,7 +909,7 @@
         if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
     }
 
-    function checkDailyReset() {
+    const tasks = ['safe', 'cellar', 'vibe', 'sec', 'safe2'];
         const now = new Date();
         const today = now.toDateString();
         const lastReset = localStorage.getItem('hj-last-reset');
@@ -858,6 +929,7 @@
     function update() {
         const now = new Date();
         const h = now.getHours();
+        const m = now.getMinutes();
         document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 
         const vibeDone = document.getElementById('c-vibe').checked;
@@ -870,11 +942,20 @@
         // Vibe row highlight
         document.getElementById('row-vibe').classList.toggle('active-alert', isVibeTime && !vibeDone);
 
-        if (isVibeTime && !vibeDone && !hasNotifiedToday) {
-            triggerAlertEffects();
-            hasNotifiedToday = true;
+        if (isVibeTime && !vibeDone) {
+            // Fire immediately at 5pm, then repeat every 5 minutes
+            const repeatSlot = Math.floor(m / 5);
+            if (!hasNotifiedToday || lastRepeatMinute !== repeatSlot) {
+                triggerAlertEffects();
+                hasNotifiedToday = true;
+                lastRepeatMinute = repeatSlot;
+            }
         }
-        if (h !== 17) hasNotifiedToday = false;
+
+        if (h !== 17) {
+            hasNotifiedToday = false;
+            lastRepeatMinute = -1;
+        }
     }
 
     window.onload = () => {
@@ -940,11 +1021,11 @@
         empty.style.display = 'none';
 
         // Render newest first
-        [...entries].reverse().forEach((entry, idx) => {
+        [...entries].reverse().forEach((entry) => {
             const { time, date } = formatLogTime(entry.ts);
             const staffBadge = entry.staff ? `<div class="log-staff">${entry.staff}</div>` : '';
             const div = document.createElement('div');
-            div.className = 'log-entry';
+            div.className = 'log-entry' + (entry.completed ? ' completed' : '');
             div.dataset.id = entry.id;
             div.innerHTML = `
                 <div class="log-meta">
@@ -956,9 +1037,11 @@
                     ${staffBadge}
                     <div class="log-text">${entry.text}</div>
                 </div>
+                <button class="log-complete" title="Mark complete">✓</button>
                 <button class="log-delete" title="Delete">×</button>
             `;
             div.querySelector('.log-delete').addEventListener('click', () => deleteEntry(entry.id));
+            div.querySelector('.log-complete').addEventListener('click', () => toggleComplete(entry.id));
             container.appendChild(div);
         });
     }
@@ -967,6 +1050,12 @@
         if (!text.trim()) return;
         const entries = loadLog();
         entries.push({ id: Date.now().toString(), ts: Date.now(), text: text.trim(), staff: staff.trim() });
+        saveLog(entries);
+        renderLog();
+    }
+
+    function toggleComplete(id) {
+        const entries = loadLog().map(e => e.id === id ? {...e, completed: !e.completed} : e);
         saveLog(entries);
         renderLog();
     }

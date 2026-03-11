@@ -603,17 +603,14 @@
     .log-delete {
         background: none;
         border: none;
-        color: var(--text-muted);
-        font-size: 14px;
+        color: rgba(240, 237, 232, 0.5);
+        font-size: 18px;
         cursor: pointer;
         padding: 0 0 0 6px;
-        opacity: 0;
-        transition: opacity 0.2s, color 0.2s;
+        transition: color 0.2s;
         flex-shrink: 0;
         line-height: 1;
     }
-    .log-entry:hover .log-delete { opacity: 1; }
-    .log-entry:active .log-delete { opacity: 1; }
     .log-delete:active { color: var(--alert); }
 
     .log-empty {
@@ -818,6 +815,8 @@
     let isTesting = false;
     let lastRepeatMinute = -1;
 
+    const tasks = ['safe', 'cellar', 'vibe', 'sec', 'safe2'];
+
     function flashScreen() {
         const flash = document.createElement('div');
         flash.style.cssText = `
@@ -900,16 +899,30 @@
     }
 
     function triggerAlertEffects() {
+        // Louder alarm sound
+        alertSound.currentTime = 0;
         alertSound.play().catch(() => {});
+
+        // Push notification
         if (Notification.permission === "granted") {
-            new Notification("Hotel Jesmond: Vibe Check", {
-                body: "Time to adjust lights and audio!",
+            new Notification("🚨 Hotel Jesmond: Vibe Check!", {
+                body: "Time to adjust lights and audio! Tap to open.",
+                requireInteraction: true,
             });
         }
-        if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
+
+        // Strong vibration pattern
+        if ("vibrate" in navigator) {
+            navigator.vibrate([300, 100, 300, 100, 300, 200, 500]);
+        }
+
+        // Full screen flash x3
+        flashScreen();
+        setTimeout(flashScreen, 800);
+        setTimeout(flashScreen, 1600);
     }
 
-    const tasks = ['safe', 'cellar', 'vibe', 'sec', 'safe2'];
+    function checkDailyReset() {
         const now = new Date();
         const today = now.toDateString();
         const lastReset = localStorage.getItem('hj-last-reset');

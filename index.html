@@ -807,7 +807,23 @@
 
 </div>
 
-<script>
+<!-- Firebase -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, deleteDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyC1-n25spgY3epta_ANquA9Gm0Ppo7ttsY",
+        authDomain: "hotel-jesmond-hub.firebaseapp.com",
+        projectId: "hotel-jesmond-hub",
+        storageBucket: "hotel-jesmond-hub.firebasestorage.app",
+        messagingSenderId: "61051163173",
+        appId: "1:61051163173:web:56a0c8f634a67881b5a5cc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     // ===== ALERT SYSTEM =====
     const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
     alertSound.volume = 1.0;
@@ -829,24 +845,15 @@
     }
 
     function triggerAlertEffects() {
-        // Louder alarm sound
         alertSound.currentTime = 0;
         alertSound.play().catch(() => {});
-
-        // Push notification
         if (Notification.permission === "granted") {
             new Notification("🚨 Hotel Jesmond: Vibe Check!", {
                 body: "Time to adjust lights and audio! Tap to open.",
                 requireInteraction: true,
             });
         }
-
-        // Strong repeating vibration pattern
-        if ("vibrate" in navigator) {
-            navigator.vibrate([300, 100, 300, 100, 300, 200, 500]);
-        }
-
-        // Full screen flash
+        if ("vibrate" in navigator) navigator.vibrate([300, 100, 300, 100, 300, 200, 500]);
         flashScreen();
         setTimeout(flashScreen, 800);
         setTimeout(flashScreen, 1600);
@@ -863,79 +870,73 @@
         tasks.forEach(k => {
             const row = document.getElementById('row-' + k);
             const checked = document.getElementById('c-' + k).checked;
-            row.classList.toggle('done', checked);
+            if (row) row.classList.toggle('done', checked);
         });
     }
 
+    // ===== FIREBASE CHECKLIST =====
+    const todayKey = () => new Date().toISOString().split('T')[0]; // e.g. "2025-03-13"
+
+    async function saveTaskToFirebase(taskKey, checked) {
+        const ref = doc(db, 'checklist', todayKey());
+        await setDoc(ref, { [taskKey]: checked }, { merge: true });
+    }
+
+    function listenToChecklist() {
+        const ref = doc(db, 'checklist', todayKey());
+        onSnapshot(ref, (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                tasks.forEach(k => {
+                    const el = document.getElementById('c-' + k);
+                    if (el && data[k] !== undefined) {
+                        el.checked = data[k];
+                    }
+                });
+                updateProgress();
+                updateTaskStyles();
+            }
+        });
+    }
+
+    // ===== FIREBASE DAILY RESET =====
+    async function checkDailyReset() {
+        const now = new Date();
+        const today = now.toDateString();
+        const lastReset = localStorage.getItem('hj-last-reset');
+        if (now.getHours() >= 4 && lastReset !== today) {
+            // Reset all tasks in Firebase for today
+            const ref = doc(db, 'checklist', todayKey());
+            const resetData = {};
+            tasks.forEach(k => resetData[k] = false);
+            await setDoc(ref, resetData);
+            localStorage.setItem('hj-last-reset', today);
+        }
+    }
+
+    // ===== CLOCK & VIBE ALERT =====
     async function fetchWeather() {
         try {
-            // Get condition and temperature separately
             const [condRes, tempRes] = await Promise.all([
                 fetch('https://wttr.in/Newcastle,Australia?format=%C'),
                 fetch('https://wttr.in/Newcastle,Australia?format=%t')
             ]);
-            const cond = (await condRes.text()).trim();
-            const temp = (await tempRes.text()).trim().replace('+','');
-
-            // Pick icon based on condition
-            const c = cond.toLowerCase();
-            let icon = '☀';
-            if (c.includes('rain') || c.includes('shower')) icon = '🌧';
-            else if (c.includes('cloud') || c.includes('overcast')) icon = '☁';
-            else if (c.includes('thunder') || c.includes('storm')) icon = '⛈';
-            else if (c.includes('snow')) icon = '❄';
-            else if (c.includes('fog') || c.includes('mist')) icon = '≈';
-            else if (c.includes('wind')) icon = '~';
-            else if (c.includes('partly')) icon = '⛅';
-
+            const cond = (await condRes.text()).trim().toLowerCase();
+            const temp = (await tempRes.text()).trim().replace('+', '');
+            let icon = '☀️';
+            if (cond.includes('rain') || cond.includes('drizzle')) icon = '🌧️';
+            else if (cond.includes('thunder')) icon = '⛈️';
+            else if (cond.includes('snow')) icon = '❄️';
+            else if (cond.includes('fog') || cond.includes('mist')) icon = '🌫️';
+            else if (cond.includes('overcast') || cond.includes('cloud')) icon = '☁️';
+            else if (cond.includes('partly')) icon = '⛅';
             document.getElementById('weather-icon').innerText = icon;
             document.getElementById('weather-temp').innerText = temp;
             document.getElementById('weather-desc').innerText = cond.toUpperCase();
-        } catch (e) {
+        } catch {
             document.getElementById('weather-icon').innerText = '📍';
             document.getElementById('weather-temp').innerText = '';
             document.getElementById('weather-desc').innerText = 'JESMOND, NSW';
-        }
-    }
-
-    function triggerAlertEffects() {
-        // Louder alarm sound
-        alertSound.currentTime = 0;
-        alertSound.play().catch(() => {});
-
-        // Push notification
-        if (Notification.permission === "granted") {
-            new Notification("🚨 Hotel Jesmond: Vibe Check!", {
-                body: "Time to adjust lights and audio! Tap to open.",
-                requireInteraction: true,
-            });
-        }
-
-        // Strong vibration pattern
-        if ("vibrate" in navigator) {
-            navigator.vibrate([300, 100, 300, 100, 300, 200, 500]);
-        }
-
-        // Full screen flash x3
-        flashScreen();
-        setTimeout(flashScreen, 800);
-        setTimeout(flashScreen, 1600);
-    }
-
-    function checkDailyReset() {
-        const now = new Date();
-        const today = now.toDateString();
-        const lastReset = localStorage.getItem('hj-last-reset');
-
-        // Reset at 4am if we haven't reset today
-        if (now.getHours() >= 4 && lastReset !== today) {
-            tasks.forEach(k => {
-                localStorage.setItem('c-' + k, 'false');
-                document.getElementById('c-' + k).checked = false;
-            });
-            localStorage.setItem('hj-last-reset', today);
-            updateProgress();
-            updateTaskStyles();
         }
     }
 
@@ -944,19 +945,12 @@
         const h = now.getHours();
         const m = now.getMinutes();
         document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-
         const vibeDone = document.getElementById('c-vibe').checked;
         const isVibeTime = (h === 17);
-
-        // Alert bar
         const showAlert = isTesting || (isVibeTime && !vibeDone);
         document.getElementById('alert-top').style.display = showAlert ? 'block' : 'none';
-
-        // Vibe row highlight
         document.getElementById('row-vibe').classList.toggle('active-alert', isVibeTime && !vibeDone);
-
         if (isVibeTime && !vibeDone) {
-            // Fire immediately at 5pm, then repeat every 5 minutes
             const repeatSlot = Math.floor(m / 5);
             if (!hasNotifiedToday || lastRepeatMinute !== repeatSlot) {
                 triggerAlertEffects();
@@ -964,53 +958,10 @@
                 lastRepeatMinute = repeatSlot;
             }
         }
-
-        if (h !== 17) {
-            hasNotifiedToday = false;
-            lastRepeatMinute = -1;
-        }
+        if (h !== 17) { hasNotifiedToday = false; lastRepeatMinute = -1; }
     }
 
-    window.onload = () => {
-        if ("Notification" in window) Notification.requestPermission();
-
-        // Load saved state
-        tasks.forEach(k => {
-            const el = document.getElementById('c-' + k);
-            if (localStorage.getItem('c-' + k) === 'true') el.checked = true;
-            el.addEventListener('change', (e) => {
-                localStorage.setItem('c-' + k, e.target.checked);
-                updateProgress();
-                updateTaskStyles();
-                update();
-            });
-        });
-
-        document.getElementById('test-btn') && (document.getElementById('test-btn').onclick = () => {
-            isTesting = true;
-            triggerAlertEffects();
-            update();
-            setTimeout(() => { isTesting = false; update(); }, 5000);
-        });
-
-        checkDailyReset();
-        updateProgress();
-        updateTaskStyles();
-        fetchWeather();
-        update();
-        setInterval(() => { checkDailyReset(); update(); }, 5000);
-    };
-    const LOG_KEY = 'hj-handover-log';
-
-    function loadLog() {
-        try { return JSON.parse(localStorage.getItem(LOG_KEY)) || []; }
-        catch { return []; }
-    }
-
-    function saveLog(entries) {
-        localStorage.setItem(LOG_KEY, JSON.stringify(entries));
-    }
-
+    // ===== FIREBASE HANDOVER LOG =====
     function formatLogTime(ts) {
         const d = new Date(ts);
         return {
@@ -1019,22 +970,16 @@
         };
     }
 
-    function renderLog() {
-        const entries = loadLog();
+    function renderLog(entries) {
         const container = document.getElementById('log-entries');
         const empty = document.getElementById('log-empty');
-
-        // Clear existing entries (keep empty msg)
         container.querySelectorAll('.log-entry').forEach(e => e.remove());
-
-        if (entries.length === 0) {
+        if (!entries || entries.length === 0) {
             empty.style.display = 'block';
             return;
         }
         empty.style.display = 'none';
-
-        // Render newest first
-        [...entries].reverse().forEach((entry) => {
+        [...entries].sort((a, b) => b.ts - a.ts).forEach((entry) => {
             const { time, date } = formatLogTime(entry.ts);
             const staffBadge = entry.staff ? `<div class="log-staff">${entry.staff}</div>` : '';
             const div = document.createElement('div');
@@ -1054,81 +999,101 @@
                 <button class="log-delete" title="Delete">×</button>
             `;
             div.querySelector('.log-delete').addEventListener('click', () => deleteEntry(entry.id));
-            div.querySelector('.log-complete').addEventListener('click', () => toggleComplete(entry.id));
+            div.querySelector('.log-complete').addEventListener('click', () => toggleComplete(entry.id, entry.completed));
             container.appendChild(div);
         });
     }
 
-    function addEntry(text, staff) {
+    function listenToLog() {
+        const q = query(collection(db, 'handover'), orderBy('ts', 'desc'));
+        onSnapshot(q, (snap) => {
+            const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderLog(entries);
+        });
+    }
+
+    async function addEntry(text, staff) {
         if (!text.trim()) return;
-        const entries = loadLog();
-        entries.push({ id: Date.now().toString(), ts: Date.now(), text: text.trim(), staff: staff.trim() });
-        saveLog(entries);
-        renderLog();
+        await addDoc(collection(db, 'handover'), {
+            ts: Date.now(),
+            text: text.trim(),
+            staff: staff.trim(),
+            completed: false
+        });
     }
 
-    function toggleComplete(id) {
-        const entries = loadLog().map(e => e.id === id ? {...e, completed: !e.completed} : e);
-        saveLog(entries);
-        renderLog();
+    async function toggleComplete(id, current) {
+        const ref = doc(db, 'handover', id);
+        await updateDoc(ref, { completed: !current });
     }
 
-    function deleteEntry(id) {
-        const entries = loadLog().filter(e => e.id !== id);
-        saveLog(entries);
-        renderLog();
+    async function deleteEntry(id) {
+        await deleteDoc(doc(db, 'handover', id));
     }
 
-    function clearLog() {
+    async function clearLog() {
         if (confirm('Clear all handover entries?')) {
-            saveLog([]);
-            renderLog();
+            const q = query(collection(db, 'handover'));
+            const snap = await import("https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js").then(m => m.getDocs(q));
+            snap.forEach(async d => await deleteDoc(d.ref));
         }
     }
 
-    // Auto-resize textarea
-    const noteInput = document.getElementById('note-input');
-    noteInput.addEventListener('input', () => {
-        noteInput.style.height = 'auto';
-        noteInput.style.height = Math.min(noteInput.scrollHeight, 100) + 'px';
-    });
-    noteInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            submitNote();
+    // ===== INIT =====
+    window.addEventListener('load', async () => {
+        if ("Notification" in window) Notification.requestPermission();
+
+        // Set up task checkboxes — save to Firebase on change
+        tasks.forEach(k => {
+            const el = document.getElementById('c-' + k);
+            el.addEventListener('change', async (e) => {
+                await saveTaskToFirebase(k, e.target.checked);
+                updateProgress();
+                updateTaskStyles();
+                update();
+            });
+        });
+
+        await checkDailyReset();
+        listenToChecklist();
+        listenToLog();
+        fetchWeather();
+        update();
+        setInterval(() => { checkDailyReset(); update(); }, 5000);
+
+        // Note input
+        const noteInput = document.getElementById('note-input');
+        noteInput.addEventListener('input', () => {
+            noteInput.style.height = 'auto';
+            noteInput.style.height = Math.min(noteInput.scrollHeight, 100) + 'px';
+        });
+        noteInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitNote();
+            }
+        });
+
+        async function submitNote() {
+            const val = noteInput.value;
+            const staff = document.getElementById('staff-input').value;
+            if (!val.trim()) return;
+            if (staff.trim()) localStorage.setItem('hj-last-staff', staff.trim());
+            await addEntry(val, staff);
+            noteInput.value = '';
+            noteInput.style.height = 'auto';
         }
+
+        document.getElementById('note-submit').addEventListener('click', submitNote);
+        document.getElementById('clear-log-btn').addEventListener('click', clearLog);
+
+        const lastStaff = localStorage.getItem('hj-last-staff');
+        if (lastStaff) document.getElementById('staff-input').value = lastStaff;
+
+        document.getElementById('staff-input').addEventListener('blur', function() {
+            if (this.value.trim()) localStorage.setItem('hj-last-staff', this.value.trim());
+        });
     });
-
-    function submitNote() {
-        const val = noteInput.value;
-        const staff = document.getElementById('staff-input').value;
-        if (!val.trim()) return;
-        // Remember staff name for next time
-        if (staff.trim()) localStorage.setItem('hj-last-staff', staff.trim());
-        addEntry(val, staff);
-        noteInput.value = '';
-        noteInput.style.height = 'auto';
-    }
-
-    document.getElementById('note-submit').addEventListener('click', submitNote);
-    document.getElementById('clear-log-btn').addEventListener('click', clearLog);
-
-    // Pre-fill last used staff name
-    const lastStaff = localStorage.getItem('hj-last-staff');
-    if (lastStaff) document.getElementById('staff-input').value = lastStaff;
-
-    // Focus staff input if empty, otherwise note input
-    document.getElementById('staff-input').addEventListener('focus', function() {
-        this.style.borderColor = 'var(--gold-border)';
-    });
-    document.getElementById('staff-input').addEventListener('blur', function() {
-        this.style.borderColor = 'rgba(255,255,255,0.08)';
-        if (this.value.trim()) localStorage.setItem('hj-last-staff', this.value.trim());
-    });
-
-    renderLog();
-
-    // ===== END HANDOVER LOG =====
 </script>
 ```
 

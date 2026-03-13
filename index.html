@@ -918,8 +918,8 @@
     async function fetchWeather() {
         try {
             const [condRes, tempRes] = await Promise.all([
-                fetch('https://wttr.in/Newcastle,Australia?format=%C'),
-                fetch('https://wttr.in/Newcastle,Australia?format=%t')
+                fetch('https://wttr.in/Newcastle+NSW+Australia?format=%C'),
+                fetch('https://wttr.in/Newcastle+NSW+Australia?format=%t')
             ]);
             const cond = (await condRes.text()).trim().toLowerCase();
             const temp = (await tempRes.text()).trim().replace('+', '');

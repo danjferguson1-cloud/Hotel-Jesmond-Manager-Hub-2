@@ -809,8 +809,8 @@
 
 <!-- Firebase -->
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, deleteDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, deleteDoc, updateDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyC1-n25spgY3epta_ANquA9Gm0Ppo7ttsY",
@@ -1038,7 +1038,7 @@
     async function clearLog() {
         if (confirm('Clear all handover entries?')) {
             const q = query(collection(db, 'handover'));
-            const snap = await import("https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js").then(m => m.getDocs(q));
+            const snap = await getDocs(q);
             snap.forEach(async d => await deleteDoc(d.ref));
         }
     }

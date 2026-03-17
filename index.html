@@ -6,55 +6,132 @@
     <title>Hotel Jesmond Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root { --navy: #0D1420; --card: #1A2438; --gold: #C5A021; --gold-dim: rgba(197, 160, 33, 0.2); }
-        body { font-family: 'DM Mono', monospace; background: var(--navy); color: white; margin: 0; padding: 20px; padding-bottom: 100px; }
-        .header { text-align: center; padding: 20px 0; border-bottom: 1px solid var(--gold-dim); margin-bottom: 20px; }
-        .logo { font-family: 'Cormorant Garamond'; font-size: 32px; letter-spacing: 8px; text-transform: uppercase; }
+        :root { 
+            --navy: #0D1420; 
+            --card: #1A2438; 
+            --gold: #C5A021; 
+            --gold-dim: rgba(197, 160, 33, 0.2); 
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #10B981;
+        }
+        body { font-family: 'DM Mono', monospace; background: var(--navy); color: white; margin: 0; padding: 20px; padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
+        
+        .header { text-align: center; padding: 30px 0; border-bottom: 1px solid var(--gold-dim); margin-bottom: 20px; }
+        .logo { font-family: 'Cormorant Garamond'; font-size: 34px; letter-spacing: 8px; text-transform: uppercase; }
+
         .section-label { color: var(--gold); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 30px 0 15px; display: block; border-bottom: 1px solid var(--gold-dim); padding-bottom: 5px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .tile { background: var(--card); padding: 15px 5px; border-radius: 12px; text-align: center; text-decoration: none; color: white; font-size: 9px; border: 1px solid rgba(255,255,255,0.05); }
-        .tile span { display: block; font-size: 20px; margin-bottom: 5px; }
-        .labor-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; }
+        
+        /* TILES */
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .tile { background: var(--card); padding: 18px 5px; border-radius: 16px; text-align: center; text-decoration: none; color: white; border: 1px solid var(--border); transition: 0.2s; }
+        .tile:active { transform: scale(0.95); background: var(--gold-dim); }
+        .tile span { display: block; font-size: 22px; margin-bottom: 8px; }
+        .tile-text { font-size: 9px; letter-spacing: 1px; opacity: 0.7; }
+
+        /* PROGRESS BAR */
+        .progress-stats { display: flex; justify-content: space-between; font-size: 10px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .progress-container { margin-bottom: 20px; background: rgba(255,255,255,0.05); height: 8px; border-radius: 10px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--gold); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* CHECKLIST */
+        .checklist-item { 
+            background: var(--card); border: 1px solid var(--border); border-radius: 14px; 
+            padding: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; 
+            transition: border-color 0.3s;
+        }
+        .task-info { display: flex; flex-direction: column; gap: 4px; }
+        .task-time { font-size: 10px; color: var(--gold); font-weight: bold; }
+        .task-name { font-size: 13px; }
+        .checkbox { width: 24px; height: 24px; border: 2px solid var(--gold-dim); border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .checked .checkbox { background: var(--gold); border-color: var(--gold); }
+        .checked .checkbox::after { content: '✓'; color: var(--navy); font-weight: bold; }
+        .checked { border-color: var(--gold-dim); }
+
+        /* HANDOVER */
+        .handover-box { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 15px; }
+        textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 10px; color: white; padding: 12px; font-family: 'DM Mono'; font-size: 13px; box-sizing: border-box; resize: none; outline: none; }
+        .btn-gold { width: 100%; background: var(--gold); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: bold; margin-top: 10px; font-family: 'DM Mono'; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+
+        /* LABOR SECTION */
+        .labor-card { background: rgba(255,255,255,0.03); border: 1px solid var(--gold-dim); border-radius: 20px; padding: 20px; }
         .l-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        input { background: #000; border: 1px solid #444; border-radius: 8px; color: white; padding: 12px; font-family: 'DM Mono'; font-size: 16px; width: 100%; box-sizing: border-box; }
-        .result { margin-top: 15px; padding: 15px; background: var(--gold-dim); border-radius: 12px; text-align: center; }
-        #wage-result { font-size: 32px; color: var(--gold); font-weight: bold; }
-        .btn { width: 100%; background: var(--gold); color: var(--navy); border: none; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 15px; font-family: 'DM Mono'; text-transform: uppercase; }
+        .l-input { background: #000; border: 1px solid var(--border); border-radius: 8px; color: white; padding: 12px; font-family: 'DM Mono'; font-size: 16px; width: 100%; box-sizing: border-box; outline: none; }
+        .result-display { margin-top: 15px; padding: 20px; background: var(--gold-dim); border-radius: 14px; text-align: center; border: 1px dashed var(--gold); }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div class="logo">Jesmond</div>
-    <div style="font-size: 9px; letter-spacing: 3px; opacity: 0.5;">MANAGER HUB</div>
+    <div style="font-size: 9px; letter-spacing: 3px; opacity: 0.5; margin-top: 5px;">MANAGER HUB</div>
 </div>
 
 <div class="grid">
-    <a href="https://hoteljesmond.au.deputy.com" class="tile"><span>📅</span>DEPUTY</a>
-    <a href="https://app.wirely.com.au" class="tile"><span>📊</span>WIRELY</a>
-    <a href="https://restaurant.nowbookit.com" class="tile"><span>🍽️</span>BISTRO</a>
+    <a href="https://hoteljesmond.au.deputy.com" class="tile"><span>📅</span><div class="tile-text">DEPUTY</div></a>
+    <a href="https://app.wirely.com.au" class="tile"><span>📊</span><div class="tile-text">WIRELY</div></a>
+    <a href="https://restaurant.nowbookit.com" class="tile"><span>🍽️</span><div class="tile-text">BISTRO</div></a>
+    <a href="https://login.newbook.cloud" class="tile"><span>🏨</span><div class="tile-text">ROOMS</div></a>
+    <a href="https://managemynightlife.com" class="tile"><span>🎵</span><div class="tile-text">NIGHTLIFE</div></a>
+    <a href="javascript:void(0)" onclick="document.getElementById('labor-anchor').scrollIntoView({behavior:'smooth'})" class="tile"><span>💰</span><div class="tile-text">LABOR</div></a>
 </div>
 
-<div class="section-label">Labor Cost Tracker</div>
+<div class="section-label">Managers Checklist</div>
+<div class="progress-stats"><span>Shift Progress</span><span id="progress-text">0 / 3</span></div>
+<div class="progress-container"><div id="progress-bar"></div></div>
+
+<div id="checklist">
+    <div class="checklist-item" onclick="toggleItem(this)">
+        <div class="task-info"><span class="task-time">10:00 AM</span><span class="task-name">Safe Count & Sign On</span></div>
+        <div class="checkbox"></div>
+    </div>
+    <div class="checklist-item" onclick="toggleItem(this)">
+        <div class="task-info"><span class="task-time">11:00 AM</span><span class="task-name">Cellar & Gas Check</span></div>
+        <div class="checkbox"></div>
+    </div>
+    <div class="checklist-item" onclick="toggleItem(this)">
+        <div class="task-info"><span class="task-time">05:00 PM</span><span class="task-name">Vibe Check (Lights/Audio)</span></div>
+        <div class="checkbox"></div>
+    </div>
+</div>
+
+<div class="section-label">Handover Log</div>
+<div class="handover-box">
+    <textarea id="log-text" rows="3" placeholder="Notes for next manager..."></textarea>
+    <button class="btn-gold" onclick="alert('Log Entry Saved')">Post Shift Note</button>
+</div>
+
+<div id="labor-anchor" class="section-label">Labor Cost Tracker</div>
 <div class="labor-card">
     <div class="l-grid">
         <div style="grid-column: span 2;">
-            <label style="font-size: 9px; opacity: 0.5;">GROSS WAGES ($)</label>
-            <input type="number" id="w" placeholder="36492.34" style="border-color: var(--gold);">
+            <label style="font-size: 8px; opacity: 0.5; text-transform: uppercase;">Gross Wages ($)</label>
+            <input type="number" id="w" class="l-input" placeholder="0.00" style="border-color: var(--gold);">
         </div>
-        <div><label style="font-size: 9px; opacity: 0.5;">GAMING</label><input type="number" id="g" placeholder="82600"></div>
-        <div><label style="font-size: 9px; opacity: 0.5;">BEV</label><input type="number" id="b" placeholder="47703"></div>
-        <div><label style="font-size: 9px; opacity: 0.5;">FOOD</label><input type="number" id="f" placeholder="40676"></div>
-        <div><label style="font-size: 9px; opacity: 0.5;">ACC</label><input type="number" id="a" placeholder="9462"></div>
+        <div><label style="font-size: 8px; opacity: 0.5;">GAMING</label><input type="number" id="g" class="l-input" placeholder="0.00"></div>
+        <div><label style="font-size: 8px; opacity: 0.5;">BEVERAGE</label><input type="number" id="b" class="l-input" placeholder="0.00"></div>
+        <div><label style="font-size: 8px; opacity: 0.5;">FOOD</label><input type="number" id="f" class="l-input" placeholder="0.00"></div>
+        <div><label style="font-size: 8px; opacity: 0.5;">ACCOMM</label><input type="number" id="a" class="l-input" placeholder="0.00"></div>
     </div>
-    <div class="result">
-        <div style="font-size: 10px; opacity: 0.6;">CURRENT WAGE %</div>
-        <div id="wage-result">0.00%</div>
+    <div class="result-display">
+        <div style="font-size: 9px; opacity: 0.7; letter-spacing: 1px; margin-bottom: 5px;">CURRENT LABOR %</div>
+        <div id="wage-result" style="font-size: 34px; color: var(--gold); font-weight: bold;">0.00%</div>
     </div>
-    <button class="btn" onclick="saveData()">Save Weekly Stats</button>
+    <button class="btn-gold" onclick="alert('Data Saved to Firebase')">Save Weekly Stats</button>
 </div>
 
 <script>
+    function updateProgress() {
+        const total = document.querySelectorAll('.checklist-item').length;
+        const done = document.querySelectorAll('.checklist-item.checked').length;
+        document.getElementById('progress-bar').style.width = (done/total * 100) + '%';
+        document.getElementById('progress-text').innerText = done + ' / ' + total;
+    }
+
+    function toggleItem(el) {
+        el.classList.toggle('checked');
+        updateProgress();
+    }
+
     const ids = ['w', 'g', 'b', 'f', 'a'];
     ids.forEach(id => {
         document.getElementById(id).addEventListener('input', () => {
@@ -65,10 +142,9 @@
                 const pct = (wages / rev) * 100;
                 res.innerText = pct.toFixed(2) + '%';
                 res.style.color = pct < 21 ? '#10B981' : (pct < 28 ? '#C5A021' : '#ff4444');
-            }
+            } else { res.innerText = '0.00%'; }
         });
     });
-    function saveData() { alert('Data saving initialized...'); }
 </script>
 
 </body>

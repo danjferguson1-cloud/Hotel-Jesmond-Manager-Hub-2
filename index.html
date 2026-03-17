@@ -8,55 +8,71 @@
     <style>
         :root { --navy: #0D1420; --card: #1A2438; --gold: #C5A021; --gold-dim: rgba(197, 160, 33, 0.2); --border: rgba(255, 255, 255, 0.08); }
         body { font-family: 'DM Mono', monospace; background: var(--navy); color: white; margin: 0; padding: 20px; padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
-        .header { text-align: center; padding: 30px 0; border-bottom: 1px solid var(--gold-dim); margin-bottom: 20px; }
-        .logo { font-family: 'Cormorant Garamond'; font-size: 34px; letter-spacing: 8px; text-transform: uppercase; }
-        .section-label { color: var(--gold); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 30px 0 15px; display: block; border-bottom: 1px solid var(--gold-dim); padding-bottom: 5px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-        .tile { background: var(--card); padding: 18px 5px; border-radius: 16px; text-align: center; text-decoration: none; color: white; border: 1px solid var(--border); }
+        .header { text-align: center; padding: 20px 0; border-bottom: 1px solid var(--gold-dim); margin-bottom: 20px; }
+        .logo { font-family: 'Cormorant Garamond'; font-size: 30px; letter-spacing: 6px; text-transform: uppercase; }
+        .section-label { color: var(--gold); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 25px 0 15px; display: block; border-bottom: 1px solid var(--gold-dim); padding-bottom: 5px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .tile { background: var(--card); padding: 15px 5px; border-radius: 12px; text-align: center; text-decoration: none; color: white; border: 1px solid var(--border); }
         .checklist-item { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
         .checkbox { width: 24px; height: 24px; border: 2px solid var(--gold-dim); border-radius: 6px; }
         .checked .checkbox { background: var(--gold); border-color: var(--gold); position: relative; }
         .checked .checkbox::after { content: '✓'; color: var(--navy); font-weight: bold; position: absolute; left: 5px; top: 1px; }
-        input, textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; color: white; padding: 12px; font-family: 'DM Mono'; margin-bottom: 10px; box-sizing: border-box; }
+        input, textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; color: white; padding: 12px; font-family: 'DM Mono'; margin-bottom: 10px; box-sizing: border-box; outline: none; }
         .btn-gold { width: 100%; background: var(--gold); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-family: 'DM Mono'; text-transform: uppercase; cursor: pointer; }
+        .labor-card { background: rgba(255,255,255,0.03); border: 1px solid var(--gold-dim); border-radius: 15px; padding: 15px; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div class="logo">Jesmond</div>
-    <div style="font-size: 9px; opacity: 0.5;">MANAGER HUB</div>
+    <div style="font-size: 9px; opacity: 0.5; letter-spacing: 2px;">MANAGER HUB</div>
 </div>
 
 <div class="grid">
-    <a href="https://hoteljesmond.au.deputy.com" class="tile"><span>📅</span><div style="font-size:9px;">ROSTERS</div></a>
-    <a href="https://app.wirely.com.au" class="tile"><span>📊</span><div style="font-size:9px;">WIRELY</div></a>
-    <a href="https://restaurant.nowbookit.com" class="tile"><span>🍽️</span><div style="font-size:9px;">BISTRO</div></a>
+    <a href="https://hoteljesmond.au.deputy.com" class="tile"><div style="font-size:18px;">📅</div><div style="font-size:8px; margin-top:5px;">ROSTERS</div></a>
+    <a href="https://app.wirely.com.au" class="tile"><div style="font-size:18px;">📊</div><div style="font-size:8px; margin-top:5px;">WIRELY</div></a>
+    <a href="https://restaurant.nowbookit.com" class="tile"><div style="font-size:18px;">🍽️</div><div style="font-size:8px; margin-top:5px;">BISTRO</div></a>
 </div>
 
 <div class="section-label">Checklist</div>
 <input type="text" id="checker-name" placeholder="Enter Your Name First">
 
 <div id="checklist">
-    <div class="checklist-item" id="task-safe" onclick="syncToggle('task-safe', 'Safe Count')">
-        <div><span style="color:var(--gold); font-size:10px;">10:00 AM</span><br>Safe Count<div class="stamp" style="font-size:9px; color:var(--gold); display:none;"></div></div>
+    <div class="checklist-item" id="task-safe" onclick="handleToggle('task-safe')">
+        <div><span style="color:var(--gold); font-size:10px;">10:00 AM</span><br><span style="font-size:13px;">Safe Count</span><div class="stamp" style="font-size:9px; color:var(--gold); display:none;"></div></div>
         <div class="checkbox"></div>
     </div>
-    <div class="checklist-item" id="task-cellar" onclick="syncToggle('task-cellar', 'Cellar Check')">
-        <div><span style="color:var(--gold); font-size:10px;">11:00 AM</span><br>Cellar Check<div class="stamp" style="font-size:9px; color:var(--gold); display:none;"></div></div>
+    <div class="checklist-item" id="task-cellar" onclick="handleToggle('task-cellar')">
+        <div><span style="color:var(--gold); font-size:10px;">11:30 AM</span><br><span style="font-size:13px;">Cellar Check</span><div class="stamp" style="font-size:9px; color:var(--gold); display:none;"></div></div>
         <div class="checkbox"></div>
     </div>
-    <div class="checklist-item" id="task-vibe" onclick="syncToggle('task-vibe', 'Vibe Check')">
-        <div><span style="color:var(--gold); font-size:10px;">05:00 PM</span><br>Vibe Check (Lights/Music/Footy)<div class="stamp" style="font-size:9px; color:var(--gold); display:none;"></div></div>
+    <div class="checklist-item" id="task-vibe" onclick="handleToggle('task-vibe')">
+        <div><span style="color:var(--gold); font-size:10px;">05:00 PM</span><br><span style="font-size:13px;">Vibe Check (Lights/Music/Footy)</span><div class="stamp" style="font-size:9px; color:var(--gold); display:none;"></div></div>
         <div class="checkbox"></div>
     </div>
 </div>
 
 <div class="section-label">Handover Notes</div>
 <input type="text" id="log-name" placeholder="Manager Name">
-<textarea id="log-text" placeholder="Shift notes..."></textarea>
-<button class="btn-gold" onclick="addHandoverNote()">Post Note</button>
-<div id="feed" style="margin-top:20px;"></div>
+<textarea id="log-text" rows="3" placeholder="Shift notes..."></textarea>
+<button class="btn-gold" onclick="sendNote()">Post Note</button>
+<div id="handover-feed" style="margin-top:15px;"></div>
+
+<div class="section-label">Labor Tracker</div>
+<div class="labor-card">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div style="grid-column: span 2;"><label style="font-size:8px; opacity:0.5;">WAGES $</label><input type="number" id="labor-w" class="calc" placeholder="0.00"></div>
+        <div><label style="font-size:8px; opacity:0.5;">GAMING</label><input type="number" id="labor-g" class="calc" placeholder="0.00"></div>
+        <div><label style="font-size:8px; opacity:0.5;">BEV</label><input type="number" id="labor-b" class="calc" placeholder="0.00"></div>
+        <div><label style="font-size:8px; opacity:0.5;">FOOD</label><input type="number" id="labor-f" class="calc" placeholder="0.00"></div>
+        <div><label style="font-size:8px; opacity:0.5;">ACC</label><input type="number" id="labor-a" class="calc" placeholder="0.00"></div>
+    </div>
+    <div style="text-align:center; margin-top:15px; padding:15px; background:var(--gold-dim); border-radius:10px;">
+        <div style="font-size:9px; opacity:0.6;">CURRENT WAGE %</div>
+        <div id="wage-pct" style="font-size:28px; color:var(--gold); font-weight:bold;">0.00%</div>
+    </div>
+</div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -72,12 +88,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    window.syncToggle = async function(id) {
-        const name = document.getElementById('checker-name').value;
+    window.handleToggle = async function(id) {
+        const n = document.getElementById('checker-name').value;
         const el = document.getElementById(id);
         if (!el.classList.contains('checked')) {
-            if (!name) return alert("Enter your name first!");
-            await setDoc(doc(db, "active_checklist", id), { name: name, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+            if (!n) return alert("Please enter your name first!");
+            await setDoc(doc(db, "active_checklist", id), { name: n, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
         } else { await deleteDoc(doc(db, "active_checklist", id)); }
     };
 
@@ -94,7 +110,7 @@
         });
     });
 
-    window.addHandoverNote = async function() {
+    window.sendNote = async function() {
         const n = document.getElementById('log-name');
         const t = document.getElementById('log-text');
         if (n.value && t.value) {
@@ -103,13 +119,24 @@
         }
     };
 
-    onSnapshot(query(collection(db, "handover_notes"), orderBy("timestamp", "desc"), limit(5)), (snap) => {
-        const f = document.getElementById('feed'); f.innerHTML = "";
+    onSnapshot(query(collection(db, "handover_notes"), orderBy("timestamp", "desc"), limit(8)), (snap) => {
+        const feed = document.getElementById('handover-feed'); feed.innerHTML = "";
         snap.forEach(d => {
             const div = document.createElement('div');
-            div.style.cssText = "background:var(--card); padding:10px; border-radius:8px; margin-bottom:10px; border-left:3px solid var(--gold);";
-            div.innerHTML = `<div style="font-size:10px; color:var(--gold);">${d.data().name}</div><div>${d.data().note}</div>`;
-            f.appendChild(div);
+            div.style.cssText = "background:var(--card); padding:12px; border-radius:10px; margin-bottom:10px; border-left:3px solid var(--gold);";
+            div.innerHTML = `<div style="font-size:10px; color:var(--gold); font-weight:bold; margin-bottom:4px;">${d.data().name}</div><div style="font-size:12px;">${d.data().note}</div>`;
+            feed.appendChild(div);
+        });
+    });
+
+    document.querySelectorAll('.calc').forEach(input => {
+        input.addEventListener('input', () => {
+            const wages = parseFloat(document.getElementById('labor-w').value) || 0;
+            const rev = (parseFloat(document.getElementById('labor-g').value) || 0) + (parseFloat(document.getElementById('labor-b').value) || 0) + (parseFloat(document.getElementById('labor-f').value) || 0) + (parseFloat(document.getElementById('labor-a').value) || 0);
+            if (rev > 0) {
+                const pct = (wages / rev) * 100;
+                document.getElementById('wage-pct').innerText = pct.toFixed(2) + '%';
+            }
         });
     });
 </script>

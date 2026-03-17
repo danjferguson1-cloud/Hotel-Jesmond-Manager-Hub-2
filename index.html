@@ -1,3 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hotel Jesmond Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --navy: #0D1420; 
+            --card: #1A2438; 
+            --gold: #C5A021; 
+            --gold-dim: rgba(197, 160, 33, 0.2); 
+            --border: rgba(255, 255, 255, 0.08);
+        }
+        body { font-family: 'DM Mono', monospace; background: var(--navy); color: white; margin: 0; padding: 20px; padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
+        
+        /* HEADER */
+        .header { text-align: center; padding: 30px 0; border-bottom: 1px solid var(--gold-dim); margin-bottom: 20px; }
+        .logo { font-family: 'Cormorant Garamond'; font-size: 34px; letter-spacing: 8px; text-transform: uppercase; }
+
+        /* TILES */
+        .section-label { color: var(--gold); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 30px 0 15px; display: block; border-bottom: 1px solid var(--gold-dim); padding-bottom: 5px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .tile { background: var(--card); padding: 18px 5px; border-radius: 16px; text-align: center; text-decoration: none; color: white; border: 1px solid var(--border); transition: 0.2s; }
+        .tile span { display: block; font-size: 22px; margin-bottom: 8px; }
+        .tile-text { font-size: 9px; letter-spacing: 1px; opacity: 0.7; }
+
+        /* PROGRESS & CHECKLIST */
+        .progress-stats { display: flex; justify-content: space-between; font-size: 10px; color: var(--gold); margin-bottom: 8px; text-transform: uppercase; }
+        .progress-container { margin-bottom: 20px; background: rgba(255,255,255,0.05); height: 8px; border-radius: 10px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--gold); transition: width 0.4s ease; }
+        
+        .checklist-item { 
+            background: var(--card); border: 1px solid var(--border); border-radius: 14px; 
+            padding: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; 
+        }
+        .checklist-item.checked { border-color: var(--gold-dim); }
+        .checkbox { width: 24px; height: 24px; border: 2px solid var(--gold-dim); border-radius: 6px; }
+        .checked .checkbox { background: var(--gold); border-color: var(--gold); position: relative; }
+        .checked .checkbox::after { content: '✓'; color: var(--navy); font-weight: bold; position: absolute; left: 5px; top: 1px; }
+
+        /* INPUTS & BUTTONS */
+        input, textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; color: white; padding: 12px; font-family: 'DM Mono'; font-size: 13px; box-sizing: border-box; outline: none; }
+        .btn-gold { width: 100%; background: var(--gold); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: bold; margin-top: 10px; font-family: 'DM Mono'; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+
+        /* LABOR SECTION */
+        .labor-card { background: rgba(255,255,255,0.03); border: 1px solid var(--gold-dim); border-radius: 20px; padding: 20px; }
+        .l-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">Jesmond</div>
+    <div style="font-size: 9px; letter-spacing: 3px; opacity: 0.5; margin-top: 5px;">MANAGER HUB</div>
+</div>
+
+<div class="grid">
+    <a href="https://hoteljesmond.au.deputy.com" class="tile"><span>📅</span><div class="tile-text">DEPUTY</div></a>
+    <a href="https://app.wirely.com.au" class="tile"><span>📊</span><div class="tile-text">WIRELY</div></a>
+    <a href="https://restaurant.nowbookit.com" class="tile"><span>🍽️</span><div class="tile-text">BISTRO</div></a>
+    <a href="https://login.newbook.cloud" class="tile"><span>🏨</span><div class="tile-text">ROOMS</div></a>
+    <a href="https://managemynightlife.com" class="tile"><span>🎵</span><div class="tile-text">NIGHTLIFE</div></a>
+    <a href="javascript:void(0)" onclick="document.getElementById('labor-section').scrollIntoView({behavior:'smooth'})" class="tile"><span>💰</span><div class="tile-text">LABOR</div></a>
+</div>
+
+<div class="section-label">Managers Checklist</div>
+<div style="margin-bottom: 15px;">
+    <input type="text" id="checker-name" placeholder="Your Name (Checklist)">
+</div>
+<div class="progress-stats"><span>Shift Progress</span><span id="progress-text">0 / 3</span></div>
+<div class="progress-container"><div id="progress-bar"></div></div>
+
+<div id="checklist">
+    <div class="checklist-item" id="task-safe" onclick="syncToggle('task-safe')">
+        <div class="task-info">
+            <span style="font-size: 10px; color: var(--gold); font-weight: bold;">10:00 AM</span><br>
+            <span style="font-size: 13px;">Safe Count & Sign On</span>
+            <div class="completion-stamp" style="font-size: 9px; color: var(--gold); margin-top: 4px; display: none;"></div>
+        </div>
+        <div class="checkbox"></div>
+    </div>
+    <div class="checklist-item" id="task-cellar" onclick="syncToggle('task-cellar')">
+        <div class="task-info">
+            <span style="font-size: 10px; color: var(--gold); font-weight: bold;">11:00 AM</span><br>
+            <span style="font-size: 13px;">Cellar & Gas Check</span>
+            <div class="completion-stamp" style="font-size: 9px; color: var(--gold); margin-top: 4px; display: none;"></div>
+        </div>
+        <div class="checkbox"></div>
+    </div>
+    <div class="checklist-item" id="task-vibe" onclick="syncToggle('task-vibe')">
+        <div class="task-info">
+            <span style="font-size: 10px; color: var(--gold); font-weight: bold;">05:00 PM</span><br>
+            <span style="font-size: 13px;">Vibe Check (Lights/Audio)</span>
+            <div class="completion-stamp" style="font-size: 9px; color: var(--gold); margin-top: 4px; display: none;"></div>
+        </div>
+        <div class="checkbox"></div>
+    </div>
+</div>
+<button id="btn-reset" style="display:none; background:none; border:1px solid var(--gold-dim); color:var(--gold); font-size:9px; padding:8px; width:100%; border-radius:8px; margin-top:10px; font-family:'DM Mono';" onclick="resetChecklist()">RESET CHECKLIST FOR NEXT SHIFT</button>
+
+<div class="section-label">Manager Handover Feed</div>
+<div class="handover-box" style="background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 15px;">
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <input type="text" id="log-name" placeholder="Name" style="flex: 1;">
+        <button class="btn-gold" style="flex: 0.5; margin-top: 0;" onclick="addHandoverNote()">POST</button>
+    </div>
+    <textarea id="log-text" rows="2" placeholder="Enter shift notes..."></textarea>
+    <div id="handover-feed" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;"></div>
+</div>
+
+<div id="labor-section" class="section-label">Weekly Labor Tracker</div>
+<div class="labor-card">
+    <div class="l-grid">
+        <div style="grid-column: span 2;">
+            <label style="font-size: 8px; opacity: 0.5;">GROSS WAGES ($)</label>
+            <input type="number" id="w" placeholder="0.00" style="border-color: var(--gold);">
+        </div>
+        <div><label style="font-size: 8px; opacity: 0.5;">GAMING</label><input type="number" id="g" placeholder="0.00"></div>
+        <div><label style="font-size: 8px; opacity: 0.5;">BEVERAGE</label><input type="number" id="b" placeholder="0.00"></div>
+        <div><label style="font-size: 8px; opacity: 0.5;">FOOD</label><input type="number" id="f" placeholder="0.00"></div>
+        <div><label style="font-size: 8px; opacity: 0.5;">ACCOMM</label><input type="number" id="a" placeholder="0.00"></div>
+    </div>
+    <div style="margin-top: 15px; padding: 15px; background: var(--gold-dim); border-radius: 12px; text-align: center; border: 1px dashed var(--gold);">
+        <div style="font-size: 9px; opacity: 0.6;">WAGE COST %</div>
+        <div id="wage-result" style="font-size: 32px; color: var(--gold); font-weight: bold;">0.00%</div>
+    </div>
+    <button class="btn-gold" onclick="saveLaborData()">SAVE WEEKLY STATS</button>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import { getFirestore, collection, doc, setDoc, deleteDoc, query, onSnapshot, serverTimestamp, addDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -14,97 +145,74 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- SYNCED CHECKLIST LOGIC ---
-    window.syncToggle = async function(taskId, taskName, taskTime) {
+    // --- SYNCED CHECKLIST ---
+    window.syncToggle = async function(taskId) {
         const name = document.getElementById('checker-name').value;
         const el = document.getElementById(taskId);
-        
         if (!el.classList.contains('checked')) {
             if (!name) return alert("Enter your name first!");
-            
             await setDoc(doc(db, "active_checklist", taskId), {
                 completedBy: name,
-                completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                timestamp: serverTimestamp()
+                completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             });
         } else {
             await deleteDoc(doc(db, "active_checklist", taskId));
         }
     };
 
-    // Listen for Checklist updates
-    onSnapshot(collection(db, "active_checklist"), (snapshot) => {
-        // Reset all first
-        document.querySelectorAll('.checklist-item').forEach(item => {
-            item.classList.remove('checked');
-            item.querySelector('.completion-stamp').style.display = 'none';
-        });
-
-        snapshot.forEach((doc) => {
-            const taskId = doc.id;
-            const data = doc.data();
-            const el = document.getElementById(taskId);
+    onSnapshot(collection(db, "active_checklist"), (snap) => {
+        document.querySelectorAll('.checklist-item').forEach(i => { i.classList.remove('checked'); i.querySelector('.completion-stamp').style.display='none'; });
+        snap.forEach(d => {
+            const el = document.getElementById(d.id);
             if (el) {
-                const stamp = el.querySelector('.completion-stamp');
                 el.classList.add('checked');
-                stamp.innerText = `Done by ${data.completedBy} at ${data.completedAt}`;
+                const stamp = el.querySelector('.completion-stamp');
+                stamp.innerText = `Done by ${d.data().completedBy} at ${d.data().completedAt}`;
                 stamp.style.display = 'block';
             }
         });
-        updateProgress();
+        const done = snap.size;
+        document.getElementById('progress-bar').style.width = (done/3 * 100) + '%';
+        document.getElementById('progress-text').innerText = done + ' / 3';
+        document.getElementById('btn-reset').style.display = done > 0 ? 'block' : 'none';
     });
 
     window.resetChecklist = async function() {
-        if (!confirm("Clear all checks for the next shift?")) return;
-        const snapshot = await onSnapshot(collection(db, "active_checklist"), (s) => {}); // Get current
-        // Note: For simplicity in this script, we delete by ID. 
-        // In a real app, you'd loop through and delete.
-        const ids = ['task-safe-count', 'task-cellar', 'task-vibe'];
-        for (const id of ids) { await deleteDoc(doc(db, "active_checklist", id)); }
+        if (confirm("Reset for next shift?")) {
+            ['task-safe', 'task-cellar', 'task-vibe'].forEach(async id => await deleteDoc(doc(db, "active_checklist", id)));
+        }
     };
 
-    function updateProgress() {
-        const total = 3;
-        const done = document.querySelectorAll('.checklist-item.checked').length;
-        document.getElementById('progress-bar').style.width = (done/total * 100) + '%';
-        document.getElementById('progress-text').innerText = done + ' / ' + total;
-        document.getElementById('btn-reset-checklist').style.display = done > 0 ? 'block' : 'none';
-    }
-
-    // --- HANDOVER LOGIC (STAMPED) ---
+    // --- SYNCED HANDOVER ---
     window.addHandoverNote = async function() {
-        const nameInput = document.getElementById('log-name');
-        const textInput = document.getElementById('log-text');
-        if (!nameInput.value || !textInput.value) return alert("Enter name and note.");
-
-        await addDoc(collection(db, "handover_notes"), {
-            name: nameInput.value,
-            note: textInput.value,
-            timestamp: serverTimestamp()
-        });
-        textInput.value = "";
+        const n = document.getElementById('log-name');
+        const t = document.getElementById('log-text');
+        if (n.value && t.value) {
+            await addDoc(collection(db, "handover_notes"), { name: n.value, note: t.value, timestamp: serverTimestamp() });
+            t.value = "";
+        }
     };
 
-    const qNotes = query(collection(db, "handover_notes"), orderBy("timestamp", "desc"), limit(10));
-    onSnapshot(qNotes, (snapshot) => {
+    const q = query(collection(db, "handover_notes"), orderBy("timestamp", "desc"), limit(10));
+    onSnapshot(q, (snap) => {
         const feed = document.getElementById('handover-feed');
         feed.innerHTML = "";
-        snapshot.forEach((doc) => {
-            const data = doc.data();
+        snap.forEach(d => {
+            const data = d.data();
             const time = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now";
-            const noteDiv = document.createElement('div');
-            noteDiv.style.cssText = "background: rgba(255,255,255,0.03); border-left: 3px solid var(--gold); padding: 10px; border-radius: 4px; margin-bottom: 8px;";
-            noteDiv.innerHTML = `<div style="display:flex; justify-content:space-between;"><span style="font-size:10px; color:var(--gold); font-weight:bold;">${data.name}</span><span style="font-size:9px; opacity:0.5;">${time}</span></div><div style="font-size:12px; margin-top:3px;">${data.note}</div>`;
-            feed.appendChild(noteDiv);
+            const div = document.createElement('div');
+            div.style.cssText = "background: rgba(255,255,255,0.03); border-left: 3px solid var(--gold); padding: 12px; border-radius: 4px;";
+            div.innerHTML = `<div style="display:flex; justify-content:space-between; font-size:10px;"><span style="color:var(--gold); font-weight:bold;">${data.name}</span><span style="opacity:0.5;">${time}</span></div><div style="font-size:12px; margin-top:5px;">${data.note}</div>`;
+            feed.appendChild(div);
         });
     });
 
     // --- LABOR CALC ---
-    const lIds = ['w', 'g', 'b', 'f', 'a'];
-    lIds.forEach(id => {
+    const ids = ['w', 'g', 'b', 'f', 'a'];
+    ids.forEach(id => {
         document.getElementById(id).addEventListener('input', () => {
             const wages = parseFloat(document.getElementById('w').value) || 0;
-            const rev = lIds.slice(1).reduce((s, i) => s + (parseFloat(document.getElementById(i).value) || 0), 0);
+            const rev = ids.slice(1).reduce((s, i) => s + (parseFloat(document.getElementById(i).value) || 0), 0);
             const res = document.getElementById('wage-result');
             if (rev > 0) {
                 const pct = (wages / rev) * 100;
@@ -113,4 +221,15 @@
             }
         });
     });
+
+    window.saveLaborData = async function() {
+        const wages = parseFloat(document.getElementById('w').value) || 0;
+        const rev = ids.slice(1).reduce((s, i) => s + (parseFloat(document.getElementById(i).value) || 0), 0);
+        if (wages > 0 && rev > 0) {
+            await addDoc(collection(db, "labor_stats"), { timestamp: serverTimestamp(), wages, percentage: (wages/rev)*100 });
+            alert("Weekly Labor Data Saved.");
+        }
+    };
 </script>
+</body>
+</html>

@@ -35,7 +35,6 @@
             background: var(--card); border: 1px solid var(--border); border-radius: 14px; 
             padding: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; 
         }
-        .checklist-item.checked { border-color: var(--gold-dim); }
         .checkbox { width: 24px; height: 24px; border: 2px solid var(--gold-dim); border-radius: 6px; }
         .checked .checkbox { background: var(--gold); border-color: var(--gold); position: relative; }
         .checked .checkbox::after { content: '✓'; color: var(--navy); font-weight: bold; position: absolute; left: 5px; top: 1px; }
@@ -98,10 +97,10 @@
         <div class="checkbox"></div>
     </div>
 </div>
-<button id="btn-reset" style="display:none; background:none; border:1px solid var(--gold-dim); color:var(--gold); font-size:9px; padding:8px; width:100%; border-radius:8px; margin-top:10px; font-family:'DM Mono';" onclick="resetChecklist()">RESET CHECKLIST FOR NEXT SHIFT</button>
+<button id="btn-reset" style="display:none; background:none; border:1px solid var(--gold-dim); color:var(--gold); font-size:9px; padding:8px; width:100%; border-radius:8px; margin-top:10px; font-family:'DM Mono';" onclick="resetChecklist()">RESET CHECKLIST</button>
 
 <div class="section-label">Manager Handover Feed</div>
-<div class="handover-box" style="background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 15px;">
+<div class="handover-box">
     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
         <input type="text" id="log-name" placeholder="Name" style="flex: 1;">
         <button class="btn-gold" style="flex: 0.5; margin-top: 0;" onclick="addHandoverNote()">POST</button>
@@ -115,14 +114,14 @@
     <div class="l-grid">
         <div style="grid-column: span 2;">
             <label style="font-size: 8px; opacity: 0.5;">GROSS WAGES ($)</label>
-            <input type="number" id="w" placeholder="0.00" style="border-color: var(--gold);">
+            <input type="number" id="w" placeholder="0.00">
         </div>
         <div><label style="font-size: 8px; opacity: 0.5;">GAMING</label><input type="number" id="g" placeholder="0.00"></div>
         <div><label style="font-size: 8px; opacity: 0.5;">BEVERAGE</label><input type="number" id="b" placeholder="0.00"></div>
         <div><label style="font-size: 8px; opacity: 0.5;">FOOD</label><input type="number" id="f" placeholder="0.00"></div>
         <div><label style="font-size: 8px; opacity: 0.5;">ACCOMM</label><input type="number" id="a" placeholder="0.00"></div>
     </div>
-    <div style="margin-top: 15px; padding: 15px; background: var(--gold-dim); border-radius: 12px; text-align: center; border: 1px dashed var(--gold);">
+    <div style="margin-top: 15px; padding: 15px; background: var(--gold-dim); border-radius: 12px; text-align: center;">
         <div style="font-size: 9px; opacity: 0.6;">WAGE COST %</div>
         <div id="wage-result" style="font-size: 32px; color: var(--gold); font-weight: bold;">0.00%</div>
     </div>
@@ -145,7 +144,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- SYNCED CHECKLIST ---
     window.syncToggle = async function(taskId) {
         const name = document.getElementById('checker-name').value;
         const el = document.getElementById(taskId);
@@ -155,9 +153,7 @@
                 completedBy: name,
                 completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             });
-        } else {
-            await deleteDoc(doc(db, "active_checklist", taskId));
-        }
+        } else { await deleteDoc(doc(db, "active_checklist", taskId)); }
     };
 
     onSnapshot(collection(db, "active_checklist"), (snap) => {
@@ -183,7 +179,6 @@
         }
     };
 
-    // --- SYNCED HANDOVER ---
     window.addHandoverNote = async function() {
         const n = document.getElementById('log-name');
         const t = document.getElementById('log-text');
@@ -207,7 +202,6 @@
         });
     });
 
-    // --- LABOR CALC ---
     const ids = ['w', 'g', 'b', 'f', 'a'];
     ids.forEach(id => {
         document.getElementById(id).addEventListener('input', () => {

@@ -1,136 +1,1105 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hotel Jesmond Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        :root { --navy: #0D1420; --card: #1A2438; --gold: #C5A021; --gold-dim: rgba(197, 160, 33, 0.2); --border: rgba(255, 255, 255, 0.08); }
-        body { font-family: 'DM Mono', monospace; background: var(--navy); color: white; margin: 0; padding: 20px; padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
-        .header { text-align: center; padding: 20px 0; border-bottom: 1px solid var(--gold-dim); margin-bottom: 20px; }
-        .logo { font-family: 'Cormorant Garamond'; font-size: 30px; letter-spacing: 6px; text-transform: uppercase; }
-        .section-label { color: var(--gold); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 25px 0 15px; display: block; border-bottom: 1px solid var(--gold-dim); padding-bottom: 5px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .tile { background: var(--card); padding: 15px 5px; border-radius: 12px; text-align: center; text-decoration: none; color: white; border: 1px solid var(--border); }
-        .checklist-item { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .checkbox { width: 24px; height: 24px; border: 2px solid var(--gold-dim); border-radius: 6px; }
-        .checked { border-color: var(--gold); }
-        .checked .checkbox { background: var(--gold); border-color: var(--gold); position: relative; }
-        .checked .checkbox::after { content: '✓'; color: var(--navy); font-weight: bold; position: absolute; left: 5px; top: 1px; }
-        input, textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; color: white; padding: 12px; font-family: 'DM Mono'; margin-bottom: 10px; box-sizing: border-box; outline: none; }
-        .btn-gold { width: 100%; background: var(--gold); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-family: 'DM Mono'; text-transform: uppercase; cursor: pointer; }
-        .stamp { font-size: 9px; color: var(--gold); margin-top: 4px; display: none; }
-    </style>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="hotel-jesmond-icon.png">
+
+```
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --navy: #1E2A44;
+        --navy-mid: #253354;
+        --navy-light: #2E3D60;
+        --gold: #C5A021;
+        --gold-light: #D9B84A;
+        --gold-dim: rgba(197, 160, 33, 0.15);
+        --gold-border: rgba(197, 160, 33, 0.25);
+        --white: #FFFFFF;
+        --off-white: #F0EDE8;
+        --text-muted: rgba(240, 237, 232, 0.45);
+        --alert: #E11D48;
+        --success: #10B981;
+        --radius: 18px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+        font-family: 'DM Mono', monospace;
+        background: var(--navy);
+        color: var(--off-white);
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+    }
+
+    
+
+
+    /* Subtle grain overlay */
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0.4;
+    }
+
+    /* ===== ALERT BAR ===== */
+    @keyframes pulse-alert {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.75; }
+    }
+    @keyframes slide-down {
+        from { transform: translateY(-100%); }
+        to { transform: translateY(0); }
+    }
+
+    #alert-top {
+        display: none;
+        background: var(--alert);
+        color: white;
+        padding: 11px 20px;
+        text-align: center;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        animation: pulse-alert 1.4s ease-in-out infinite, slide-down 0.3s ease;
+        position: relative;
+        z-index: 100;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+        background-image: linear-gradient(180deg, #1a2035 0%, #0d1420 100%);
+        background-size: cover;
+        background-position: center 30%;
+        border-bottom: 1px solid var(--gold-border);
+        padding: 36px 24px 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Dark gradient overlay so text stays readable */
+    .header::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to bottom,
+            rgba(10, 14, 26, 0.72) 0%,
+            rgba(10, 14, 26, 0.55) 50%,
+            rgba(10, 14, 26, 0.80) 100%
+        );
+    }
+
+    .header::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        opacity: 0.6;
+    }
+
+    /* Decorative corner marks */
+    .corner { position: absolute; width: 16px; height: 16px; z-index: 2; }
+    .corner-tl { top: 20px; left: 20px; border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); opacity: 0.7; }
+    .corner-tr { top: 20px; right: 20px; border-top: 1px solid var(--gold); border-right: 1px solid var(--gold); opacity: 0.7; }
+    .corner-bl { bottom: 14px; left: 20px; border-bottom: 1px solid var(--gold); border-left: 1px solid var(--gold); opacity: 0.4; }
+    .corner-br { bottom: 14px; right: 20px; border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold); opacity: 0.4; }
+
+    .logo-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .logo-eyebrow {
+        font-family: 'DM Mono', monospace;
+        font-size: 9px;
+        font-weight: 400;
+        letter-spacing: 6px;
+        color: var(--gold-light);
+        text-transform: uppercase;
+        text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+    }
+
+    .logo-rule {
+        width: 220px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        opacity: 0.6;
+    }
+
+    .logo-name {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 300;
+        font-size: 38px;
+        letter-spacing: 10px;
+        color: #fff;
+        text-transform: uppercase;
+        line-height: 1;
+        text-shadow: 0 2px 20px rgba(0,0,0,0.7), 0 0 40px rgba(197,160,33,0.15);
+    }
+
+    .logo-sub {
+        font-family: 'Cormorant Garamond', serif;
+        font-style: italic;
+        font-size: 12px;
+        letter-spacing: 2px;
+        color: rgba(255,255,255,0.7);
+        margin-top: 2px;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+    }
+
+    /* ===== STATUS BAR ===== */
+    .status-bar {
+        background: var(--navy-mid);
+        padding: 10px 22px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    #clock {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gold-light);
+        letter-spacing: 2px;
+    }
+
+    #weather-wrap {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    #weather-icon {
+        font-size: 16px;
+        color: var(--gold-light);
+    }
+    #weather-temp {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gold-light);
+        letter-spacing: 1px;
+    }
+    #weather-desc {
+        font-size: 10px;
+        font-weight: 300;
+        color: var(--text-muted);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+
+    /* ===== SCROLL AREA ===== */
+    .scroll-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 22px 18px 36px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .scroll-area::-webkit-scrollbar { display: none; }
+
+    /* ===== SECTION LABEL ===== */
+    .section-label {
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 3.5px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin: 0 0 13px 2px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--gold-border), transparent);
+    }
+
+    /* ===== QUICK ACCESS GRID ===== */
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 28px;
+    }
+
+    .tile {
+        background: var(--navy-mid);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: var(--radius);
+        aspect-ratio: 1 / 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .tile::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 0%, rgba(197,160,33,0.08) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .tile:active {
+        transform: scale(0.96);
+        border-color: var(--gold-border);
+    }
+    .tile:active::before { opacity: 1; }
+
+    .tile-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+        line-height: 1;
+    }
+
+    .tile-label {
+        font-family: 'DM Mono', monospace;
+        font-size: 10px;
+        font-weight: 400;
+        color: var(--off-white);
+        text-align: center;
+        letter-spacing: 0.5px;
+        line-height: 1.5;
+        opacity: 0.85;
+    }
+
+    .tile-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 7px;
+        height: 7px;
+        background: var(--gold);
+        border-radius: 50%;
+        opacity: 0.7;
+    }
+
+    /* ===== CHECKLIST ===== */
+    .checklist {
+        background: var(--navy-mid);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: var(--radius);
+        overflow: hidden;
+        margin-bottom: 22px;
+    }
+
+    .task-row {
+        display: flex;
+        align-items: center;
+        padding: 16px 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        gap: 14px;
+        transition: background 0.15s;
+    }
+    .task-row:last-child { border-bottom: none; }
+    .task-row.done { opacity: 0.45; }
+    .task-row.active-alert .time-chip { background: var(--alert); color: white; }
+
+    .time-chip {
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        color: var(--navy);
+        background: var(--gold);
+        padding: 5px 10px;
+        border-radius: 8px;
+        white-space: nowrap;
+        min-width: 60px;
+        text-align: center;
+        transition: background 0.3s, color 0.3s;
+    }
+
+    .task-name {
+        font-size: 13px;
+        font-weight: 400;
+        color: var(--off-white);
+        flex: 1;
+        letter-spacing: 0.3px;
+    }
+
+    /* Custom checkbox */
+    .check-wrap {
+        position: relative;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+    .check-wrap input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        z-index: 2;
+    }
+    .check-box {
+        width: 24px;
+        height: 24px;
+        border-radius: 7px;
+        border: 1.5px solid var(--gold-border);
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    .check-wrap input:checked ~ .check-box {
+        background: var(--gold);
+        border-color: var(--gold);
+    }
+    .check-box::after {
+        content: '';
+        width: 5px;
+        height: 9px;
+        border-right: 2px solid var(--navy);
+        border-bottom: 2px solid var(--navy);
+        transform: rotate(42deg) scaleY(0);
+        margin-top: -2px;
+        transition: transform 0.15s ease;
+    }
+    .check-wrap input:checked ~ .check-box::after {
+        transform: rotate(42deg) scaleY(1);
+    }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-wrap {
+        margin-bottom: 28px;
+    }
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .progress-track {
+        height: 4px;
+        background: var(--navy-light);
+        border-radius: 99px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--gold), var(--gold-light));
+        border-radius: 99px;
+        transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        width: 0%;
+    }
+    #progress-pct {
+        font-size: 10px;
+        color: var(--gold);
+        letter-spacing: 1px;
+    }
+
+    .log-entry.completed .log-text {
+        text-decoration: line-through;
+        opacity: 0.5;
+    }
+    .log-entry.completed {
+        background: rgba(16, 185, 129, 0.06);
+        border-left: 3px solid #10B981;
+    }
+    .log-complete {
+        background: none;
+        border: 1.5px solid rgba(255,255,255,0.15);
+        border-radius: 7px;
+        width: 26px;
+        height: 26px;
+        flex-shrink: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        transition: all 0.2s;
+        margin-right: 4px;
+        color: transparent;
+    }
+    .log-entry.completed .log-complete {
+        background: #10B981;
+        border-color: #10B981;
+        color: white;
+    }
+
+    .log-staff {
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--navy);
+        background: var(--gold);
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 6px;
+        margin-bottom: 5px;
+    }
+
+    /* ===== TEST BUTTON ===== */
+    .footer-area {
+        text-align: center;
+        padding: 8px 0 44px;
+    }
+    #test-btn {
+        background: var(--navy-mid);
+        border: 1px solid var(--gold-border);
+        color: var(--gold);
+        padding: 14px 32px;
+        border-radius: var(--radius);
+        font-family: 'DM Mono', monospace;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        width: 100%;
+        transition: background 0.2s, border-color 0.2s;
+    }
+    #test-btn:active {
+        background: var(--gold-dim);
+        border-color: var(--gold);
+    }
+
+    /* ===== HANDOVER LOG ===== */
+    .handover-card {
+        background: var(--navy-mid);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: var(--radius);
+        overflow: hidden;
+        margin-bottom: 22px;
+    }
+
+    .handover-input-row {
+        display: flex;
+        gap: 10px;
+        padding: 14px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        align-items: flex-end;
+    }
+
+    #note-input {
+        flex: 1;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        color: var(--off-white);
+        font-family: 'DM Mono', monospace;
+        font-size: 12px;
+        font-weight: 300;
+        padding: 11px 14px;
+        resize: none;
+        outline: none;
+        min-height: 44px;
+        max-height: 100px;
+        line-height: 1.5;
+        transition: border-color 0.2s;
+    }
+    #note-input::placeholder { color: var(--text-muted); }
+    #note-input:focus { border-color: var(--gold-border); }
+
+    #note-submit {
+        background: var(--gold);
+        border: none;
+        border-radius: 12px;
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, transform 0.15s;
+    }
+    #note-submit:active { background: var(--gold-light); transform: scale(0.93); }
+
+    .log-entries {
+        max-height: 280px;
+        overflow-y: auto;
+        scrollbar-width: none;
+    }
+    .log-entries::-webkit-scrollbar { display: none; }
+
+    .log-entry {
+        padding: 13px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        animation: fade-up 0.25s ease both;
+    }
+    .log-entry:last-child { border-bottom: none; }
+
+    .log-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        flex-shrink: 0;
+        padding-top: 1px;
+    }
+
+    .log-time {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--gold);
+        letter-spacing: 1px;
+        white-space: nowrap;
+    }
+
+    .log-date {
+        font-size: 10px;
+        color: var(--off-white);
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+
+    .log-dot {
+        width: 5px;
+        height: 5px;
+        background: var(--gold-border);
+        border-radius: 50%;
+        margin-top: 4px;
+    }
+
+    .log-text {
+        font-size: 12px;
+        font-weight: 300;
+        color: var(--off-white);
+        line-height: 1.55;
+        flex: 1;
+        opacity: 0.85;
+        word-break: break-word;
+    }
+
+    .log-delete {
+        background: none;
+        border: none;
+        color: rgba(240, 237, 232, 0.5);
+        font-size: 18px;
+        cursor: pointer;
+        padding: 0 0 0 6px;
+        transition: color 0.2s;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+    .log-delete:active { color: var(--alert); }
+
+    .log-empty {
+        padding: 28px 16px;
+        text-align: center;
+        font-size: 11px;
+        color: var(--text-muted);
+        letter-spacing: 1px;
+        font-style: italic;
+    }
+
+    .log-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 10px 16px;
+        border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    #clear-log-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-family: 'DM Mono', monospace;
+        font-size: 8px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        padding: 4px 0;
+        transition: color 0.2s;
+    }
+    #clear-log-btn:active { color: var(--alert); }
+
+    @keyframes screenFlash {
+        0% { opacity: 0.85; }
+        100% { opacity: 0; }
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .grid, .checklist, .progress-wrap, .handover-section, .footer-area {
+        animation: fade-up 0.5s ease both;
+    }
+    .grid { animation-delay: 0.05s; }
+    .progress-wrap { animation-delay: 0.1s; }
+    .checklist { animation-delay: 0.15s; }
+    .handover-section { animation-delay: 0.2s; }
+    .footer-area { animation-delay: 0.25s; }
+
+    
+</style>
+```
+
 </head>
 <body>
 
+```
+<div id="alert-top">🚨 &nbsp; Vibe Check — Adjust lights & audio now</div>
+
 <div class="header">
-    <div class="logo">Jesmond</div>
-    <div style="font-size: 9px; opacity: 0.5; letter-spacing: 2px;">MANAGER HUB</div>
-</div>
-
-<div class="grid">
-    <a href="https://hoteljesmond.au.deputy.com" class="tile"><div style="font-size:18px;">📅</div><div style="font-size:8px; margin-top:5px;">ROSTERS</div></a>
-    <a href="https://app.wirely.com.au" class="tile"><div style="font-size:18px;">📊</div><div style="font-size:8px; margin-top:5px;">WIRELY</div></a>
-    <a href="https://restaurant.nowbookit.com" class="tile"><div style="font-size:18px;">🍽️</div><div style="font-size:8px; margin-top:5px;">BISTRO</div></a>
-</div>
-
-<div class="section-label">Checklist</div>
-<input type="text" id="user-name" placeholder="Enter Your Name First">
-
-<div id="checklist">
-    <div class="checklist-item" id="task1" onclick="toggleTask('task1')">
-        <div><span style="color:var(--gold); font-size:10px;">10:00 AM</span><br><span style="font-size:13px;">Safe Count</span><div class="stamp"></div></div>
-        <div class="checkbox"></div>
-    </div>
-    <div class="checklist-item" id="task2" onclick="toggleTask('task2')">
-        <div><span style="color:var(--gold); font-size:10px;">11:30 AM</span><br><span style="font-size:13px;">Cellar Check</span><div class="stamp"></div></div>
-        <div class="checkbox"></div>
-    </div>
-    <div class="checklist-item" id="task3" onclick="toggleTask('task3')">
-        <div><span style="color:var(--gold); font-size:10px;">05:00 PM</span><br><span style="font-size:13px;">Vibe Check (Lights/Music/Footy)</span><div class="stamp"></div></div>
-        <div class="checkbox"></div>
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+    <div class="logo-wrap">
+        <div class="logo-eyebrow">Hotel</div>
+        <div class="logo-rule"></div>
+        <div class="logo-name">Jesmond</div>
+        <div class="logo-rule"></div>
+        <div class="logo-sub">Newcastle, Australia</div>
     </div>
 </div>
 
-<div class="section-label">Handover Notes</div>
-<input type="text" id="mgr-name" placeholder="Manager Name">
-<textarea id="mgr-note" rows="3" placeholder="Shift notes..."></textarea>
-<button class="btn-gold" id="post-btn">Post Note</button>
-<div id="feed" style="margin-top:15px;"></div>
+<div class="status-bar">
+    <div id="clock">00:00 AM</div>
+    <div id="weather-wrap">
+        <span id="weather-icon">☀</span>
+        <span id="weather-temp">--°</span>
+        <span id="weather-desc">LOADING</span>
+    </div>
+</div>
 
+<div class="scroll-area">
+
+    <div class="section-label" style="font-size:14px; color: var(--gold); opacity:1; margin-bottom:16px; letter-spacing:3px;">Manager Hub</div>
+    <div class="button-grid grid">
+        <div onclick="window.location.href='https://hoteljesmond.au.deputy.com/#/home'" class="tile">
+            <div class="tile-badge"></div>
+            <div class="tile-icon">📅</div>
+            <div class="tile-label">Deputy<br>Rosters</div>
+        </div>
+        <div onclick="window.location.href='https://apps.apple.com/au/app/rtipanel/id454328684'" class="tile">
+            <div class="tile-badge"></div>
+            <div class="tile-icon">📺</div>
+            <div class="tile-label">Sound<br>& TVs</div>
+        </div>
+        <div onclick="window.location.href='https://restaurant.nowbookit.com/'" class="tile">
+            <div class="tile-badge"></div>
+            <div class="tile-icon">🍽️</div>
+            <div class="tile-label">Bistro<br>Bookings</div>
+        </div>
+        <div onclick="window.location.href='https://login.newbook.cloud'" class="tile">
+            <div class="tile-badge"></div>
+            <div class="tile-icon">🏨</div>
+            <div class="tile-label">Room<br>Check-ins</div>
+        </div>
+        <div onclick="window.location.href='https://www.managemynightlife.com/#/zones'" class="tile">
+            <div class="tile-badge"></div>
+            <div class="tile-icon">🎵</div>
+            <div class="tile-label">Nightlife<br>Zones</div>
+        </div>
+        <div onclick="window.location.href='https://app.wirely.com.au/staff/reporting-snapshot'" class="tile">
+            <div class="tile-badge"></div>
+            <div class="tile-icon">📊</div>
+            <div class="tile-label">POS<br>Snapshot</div>
+        </div>
+    </div>
+
+    <div class="section-label" style="font-size:14px; color: var(--gold); opacity:1; margin-bottom:16px; letter-spacing:3px;">Managers Checklist</div>
+
+    <div class="progress-wrap">
+        <div class="progress-header">
+            <span class="section-label" style="margin:0; letter-spacing:2px; font-size:9px;">Today's Progress</span>
+            <span id="progress-pct">0 / 5</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <div class="checklist">
+        <div class="task-row" id="row-safe">
+            <div class="time-chip">10:00 AM</div>
+            <div class="task-name">Safe Count <span style="font-size:11px; opacity:0.55; font-weight:300;">(sign on for safe count)</span></div>
+            <div class="check-wrap">
+                <input type="checkbox" id="c-safe">
+                <div class="check-box"></div>
+            </div>
+        </div>
+        <div class="task-row" id="row-cellar">
+            <div class="time-chip">10:30 AM</div>
+            <div class="task-name">Cellar Check <span style="font-size:11px; opacity:0.55; font-weight:300;">(check beer/post mix/gas levels and general cleanliness)</span></div>
+            <div class="check-wrap">
+                <input type="checkbox" id="c-cellar">
+                <div class="check-box"></div>
+            </div>
+        </div>
+        <div class="task-row" id="row-vibe">
+            <div class="time-chip">05:00 PM</div>
+            <div class="task-name">Vibe Check <span style="font-size:11px; opacity:0.55; font-weight:300;">(lighting/music levels — is there footy on tonight?)</span></div>
+            <div class="check-wrap">
+                <input type="checkbox" id="c-vibe">
+                <div class="check-box"></div>
+            </div>
+        </div>
+        <div class="task-row" id="row-sec">
+            <div class="time-chip">12:00 AM</div>
+            <div class="task-name">Security Check <span style="font-size:11px; opacity:0.55; font-weight:300;">(check all doors before starting gaming clearance)</span></div>
+            <div class="check-wrap">
+                <input type="checkbox" id="c-sec">
+                <div class="check-box"></div>
+            </div>
+        </div>
+        <div class="task-row" id="row-safe2">
+            <div class="time-chip">01:00 AM</div>
+            <div class="task-name">Safe Count <span style="font-size:11px; opacity:0.55; font-weight:300;">(count up, sign off and head home)</span></div>
+            <div class="check-wrap">
+                <input type="checkbox" id="c-safe2">
+                <div class="check-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="handover-section">
+        <div class="section-label">Shift Handover Log</div>
+        <div class="handover-card">
+            <div class="handover-input-row">
+                <div style="display:flex; flex-direction:column; gap:8px; flex:1;">
+                    <input type="text" id="staff-input" placeholder="Your name…" autocomplete="name" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:10px; color:var(--off-white); font-family:'DM Mono',monospace; font-size:11px; padding:8px 12px; outline:none; width:100%; transition: border-color 0.2s;" />
+                    <textarea id="note-input" placeholder="Add a handover note…" rows="1"></textarea>
+                </div>
+                <button id="note-submit">＋</button>
+            </div>
+            <div class="log-entries" id="log-entries">
+                <div class="log-empty" id="log-empty">No entries yet — add your first note above.</div>
+            </div>
+            <div class="log-footer">
+                <button id="clear-log-btn">Clear all entries</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Firebase -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, deleteDoc, query, onSnapshot, serverTimestamp, addDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, deleteDoc, updateDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyC1-n25spgY3epta_ANquA9Gm0Ppo7ttsY",
         authDomain: "hotel-jesmond-hub.firebaseapp.com",
         projectId: "hotel-jesmond-hub",
+        storageBucket: "hotel-jesmond-hub.firebasestorage.app",
+        messagingSenderId: "61051163173",
         appId: "1:61051163173:web:56a0c8f634a67881b5a5cc"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- CHECKLIST LOGIC ---
-    window.toggleTask = async function(taskId) {
-        const nameInput = document.getElementById('user-name').value;
-        const taskEl = document.getElementById(taskId);
-        
-        if (!taskEl.classList.contains('checked')) {
-            if (!nameInput) { alert("Please enter your name at the top first!"); return; }
-            await setDoc(doc(db, "active_checklist", taskId), { 
-                doneBy: nameInput, 
-                doneAt: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) 
-            });
-        } else {
-            await deleteDoc(doc(db, "active_checklist", taskId));
-        }
-    };
+    // ===== ALERT SYSTEM =====
+    const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
+    alertSound.volume = 1.0;
+    let hasNotifiedToday = false;
+    let isTesting = false;
+    let lastRepeatMinute = -1;
 
-    onSnapshot(collection(db, "active_checklist"), (snap) => {
-        document.querySelectorAll('.checklist-item').forEach(item => {
-            item.classList.remove('checked');
-            item.querySelector('.stamp').style.display = 'none';
+    const tasks = ['safe', 'cellar', 'vibe', 'sec', 'safe2'];
+
+    function flashScreen() {
+        const flash = document.createElement('div');
+        flash.style.cssText = `
+            position: fixed; inset: 0; background: #E11D48;
+            z-index: 99998; pointer-events: none;
+            animation: screenFlash 0.6s ease forwards;
+        `;
+        document.body.appendChild(flash);
+        setTimeout(() => flash.remove(), 600);
+    }
+
+    function triggerAlertEffects() {
+        alertSound.currentTime = 0;
+        alertSound.play().catch(() => {});
+        if (Notification.permission === "granted") {
+            new Notification("🚨 Hotel Jesmond: Vibe Check!", {
+                body: "Time to adjust lights and audio! Tap to open.",
+                requireInteraction: true,
+            });
+        }
+        if ("vibrate" in navigator) navigator.vibrate([300, 100, 300, 100, 300, 200, 500]);
+        flashScreen();
+        setTimeout(flashScreen, 800);
+        setTimeout(flashScreen, 1600);
+    }
+
+    function updateProgress() {
+        const done = tasks.filter(k => document.getElementById('c-' + k).checked).length;
+        const pct = (done / tasks.length) * 100;
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('progress-pct').textContent = done + ' / ' + tasks.length;
+    }
+
+    function updateTaskStyles() {
+        tasks.forEach(k => {
+            const row = document.getElementById('row-' + k);
+            const checked = document.getElementById('c-' + k).checked;
+            if (row) row.classList.toggle('done', checked);
         });
-        snap.forEach(d => {
-            const el = document.getElementById(d.id);
-            if (el) {
-                el.classList.add('checked');
-                const s = el.querySelector('.stamp');
-                s.innerText = `Done by ${d.data().doneBy} @ ${d.data().doneAt}`;
-                s.style.display = 'block';
+    }
+
+    // ===== FIREBASE CHECKLIST =====
+    const todayKey = () => new Date().toISOString().split('T')[0]; // e.g. "2025-03-13"
+
+    async function saveTaskToFirebase(taskKey, checked) {
+        const ref = doc(db, 'checklist', todayKey());
+        await setDoc(ref, { [taskKey]: checked }, { merge: true });
+    }
+
+    function listenToChecklist() {
+        const ref = doc(db, 'checklist', todayKey());
+        onSnapshot(ref, (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                tasks.forEach(k => {
+                    const el = document.getElementById('c-' + k);
+                    if (el && data[k] !== undefined) {
+                        el.checked = data[k];
+                    }
+                });
+                updateProgress();
+                updateTaskStyles();
             }
         });
-    });
+    }
 
-    // --- HANDOVER LOGIC ---
-    document.getElementById('post-btn').addEventListener('click', async () => {
-        const n = document.getElementById('mgr-name').value;
-        const t = document.getElementById('mgr-note').value;
-        if (n && t) {
-            await addDoc(collection(db, "handover_notes"), { 
-                name: n, 
-                note: t, 
-                timestamp: serverTimestamp() 
-            });
-            document.getElementById('mgr-note').value = "";
-        } else { alert("Enter name and note!"); }
-    });
+    // ===== FIREBASE DAILY RESET =====
+    async function checkDailyReset() {
+        const now = new Date();
+        const today = now.toDateString();
+        const lastReset = localStorage.getItem('hj-last-reset');
+        if (now.getHours() >= 4 && lastReset !== today) {
+            // Reset all tasks in Firebase for today
+            const ref = doc(db, 'checklist', todayKey());
+            const resetData = {};
+            tasks.forEach(k => resetData[k] = false);
+            await setDoc(ref, resetData);
+            localStorage.setItem('hj-last-reset', today);
+        }
+    }
 
-    onSnapshot(query(collection(db, "handover_notes"), orderBy("timestamp", "desc"), limit(8)), (snap) => {
-        const feedEl = document.getElementById('feed');
-        feedEl.innerHTML = "";
-        snap.forEach(d => {
-            const data = d.data();
+    // ===== CLOCK & VIBE ALERT =====
+    async function fetchWeather() {
+        try {
+            // Open-Meteo - free, no API key, fixed Newcastle NSW coordinates
+            const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-32.9272&longitude=151.7812&current_weather=true&hourly=relative_humidity_2m&timezone=Australia%2FSydney');
+            const data = await res.json();
+            const code = data.current_weather.weathercode;
+            const temp = Math.round(data.current_weather.temperature);
+
+            let icon = '☀️';
+            if (code === 0) icon = '☀️';
+            else if ([1,2].includes(code)) icon = '⛅';
+            else if (code === 3) icon = '☁️';
+            else if ([45,48].includes(code)) icon = '🌫️';
+            else if ([51,53,55,61,63,65,80,81,82].includes(code)) icon = '🌧️';
+            else if ([71,73,75,77,85,86].includes(code)) icon = '❄️';
+            else if ([95,96,99].includes(code)) icon = '⛈️';
+
+            const descs = {0:'Clear',1:'Mostly Clear',2:'Partly Cloudy',3:'Overcast',45:'Foggy',48:'Foggy',51:'Drizzle',53:'Drizzle',55:'Drizzle',61:'Rain',63:'Rain',65:'Heavy Rain',71:'Snow',73:'Snow',75:'Heavy Snow',77:'Snow Grains',80:'Showers',81:'Showers',82:'Heavy Showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'};
+
+            document.getElementById('weather-icon').innerText = icon;
+            document.getElementById('weather-temp').innerText = temp + '°C';
+            document.getElementById('weather-desc').innerText = (descs[code] || 'Clear').toUpperCase();
+        } catch {
+            document.getElementById('weather-icon').innerText = '🌤️';
+            document.getElementById('weather-temp').innerText = '';
+            document.getElementById('weather-desc').innerText = 'NEWCASTLE NSW';
+        }
+    }
+
+    function update() {
+        const now = new Date();
+        const h = now.getHours();
+        const m = now.getMinutes();
+        document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        const vibeDone = document.getElementById('c-vibe').checked;
+        const isVibeTime = (h === 17);
+        const showAlert = isTesting || (isVibeTime && !vibeDone);
+        document.getElementById('alert-top').style.display = showAlert ? 'block' : 'none';
+        document.getElementById('row-vibe').classList.toggle('active-alert', isVibeTime && !vibeDone);
+        if (isVibeTime && !vibeDone) {
+            const repeatSlot = Math.floor(m / 5);
+            if (!hasNotifiedToday || lastRepeatMinute !== repeatSlot) {
+                triggerAlertEffects();
+                hasNotifiedToday = true;
+                lastRepeatMinute = repeatSlot;
+            }
+        }
+        if (h !== 17) { hasNotifiedToday = false; lastRepeatMinute = -1; }
+    }
+
+    // ===== FIREBASE HANDOVER LOG =====
+    function formatLogTime(ts) {
+        const d = new Date(ts);
+        return {
+            time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
+            date: d.toLocaleDateString([], { day: 'numeric', month: 'short' })
+        };
+    }
+
+    function renderLog(entries) {
+        const container = document.getElementById('log-entries');
+        const empty = document.getElementById('log-empty');
+        container.querySelectorAll('.log-entry').forEach(e => e.remove());
+        if (!entries || entries.length === 0) {
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+        [...entries].sort((a, b) => b.ts - a.ts).forEach((entry) => {
+            const { time, date } = formatLogTime(entry.ts);
+            const staffBadge = entry.staff ? `<div class="log-staff">${entry.staff}</div>` : '';
             const div = document.createElement('div');
-            div.style.cssText = "background:var(--card); padding:12px; border-radius:10px; margin-bottom:10px; border-left:3px solid var(--gold);";
-            div.innerHTML = `<div style="font-size:10px; color:var(--gold); font-weight:bold;">${data.name}</div><div style="font-size:12px;">${data.note}</div>`;
-            feedEl.appendChild(div);
+            div.className = 'log-entry' + (entry.completed ? ' completed' : '');
+            div.dataset.id = entry.id;
+            div.innerHTML = `
+                <div class="log-meta">
+                    <div class="log-time">${time}</div>
+                    <div class="log-date">${date}</div>
+                    <div class="log-dot"></div>
+                </div>
+                <div style="flex:1">
+                    ${staffBadge}
+                    <div class="log-text">${entry.text}</div>
+                </div>
+                <button class="log-complete" title="Mark complete">✓</button>
+                <button class="log-delete" title="Delete">×</button>
+            `;
+            div.querySelector('.log-delete').addEventListener('click', () => deleteEntry(entry.id));
+            div.querySelector('.log-complete').addEventListener('click', () => toggleComplete(entry.id, entry.completed));
+            container.appendChild(div);
+        });
+    }
+
+    function listenToLog() {
+        const q = query(collection(db, 'handover'), orderBy('ts', 'desc'));
+        onSnapshot(q, (snap) => {
+            const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderLog(entries);
+        });
+    }
+
+    async function addEntry(text, staff) {
+        if (!text.trim()) return;
+        await addDoc(collection(db, 'handover'), {
+            ts: Date.now(),
+            text: text.trim(),
+            staff: staff.trim(),
+            completed: false
+        });
+    }
+
+    async function toggleComplete(id, current) {
+        const ref = doc(db, 'handover', id);
+        await updateDoc(ref, { completed: !current });
+    }
+
+    async function deleteEntry(id) {
+        await deleteDoc(doc(db, 'handover', id));
+    }
+
+    async function clearLog() {
+        if (confirm('Clear all handover entries?')) {
+            const q = query(collection(db, 'handover'));
+            const snap = await getDocs(q);
+            snap.forEach(async d => await deleteDoc(d.ref));
+        }
+    }
+
+    // ===== INIT =====
+    window.addEventListener('load', async () => {
+        if ("Notification" in window) Notification.requestPermission();
+
+        // Set up task checkboxes — save to Firebase on change
+        tasks.forEach(k => {
+            const el = document.getElementById('c-' + k);
+            el.addEventListener('change', async (e) => {
+                await saveTaskToFirebase(k, e.target.checked);
+                updateProgress();
+                updateTaskStyles();
+                update();
+            });
+        });
+
+        await checkDailyReset();
+        listenToChecklist();
+        listenToLog();
+        fetchWeather();
+        update();
+        setInterval(() => { checkDailyReset(); update(); }, 5000);
+
+        // Note input
+        const noteInput = document.getElementById('note-input');
+        noteInput.addEventListener('input', () => {
+            noteInput.style.height = 'auto';
+            noteInput.style.height = Math.min(noteInput.scrollHeight, 100) + 'px';
+        });
+        noteInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitNote();
+            }
+        });
+
+        async function submitNote() {
+            const val = noteInput.value;
+            const staff = document.getElementById('staff-input').value;
+            if (!val.trim()) return;
+            if (staff.trim()) localStorage.setItem('hj-last-staff', staff.trim());
+            await addEntry(val, staff);
+            noteInput.value = '';
+            noteInput.style.height = 'auto';
+        }
+
+        document.getElementById('note-submit').addEventListener('click', submitNote);
+        document.getElementById('clear-log-btn').addEventListener('click', clearLog);
+
+        const lastStaff = localStorage.getItem('hj-last-staff');
+        if (lastStaff) document.getElementById('staff-input').value = lastStaff;
+
+        document.getElementById('staff-input').addEventListener('blur', function() {
+            if (this.value.trim()) localStorage.setItem('hj-last-staff', this.value.trim());
         });
     });
 </script>
+```
+
 </body>
 </html>

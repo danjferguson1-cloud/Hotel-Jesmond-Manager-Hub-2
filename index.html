@@ -4,246 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hotel Jesmond Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --navy-deep: #0D1420;
-            --navy-card: #1A2438;
-            --gold: #C5A021;
-            --gold-dim: rgba(197, 160, 33, 0.2);
-            --text-main: #FFFFFF;
-            --text-muted: rgba(255, 255, 255, 0.5);
-        }
-
-        body {
-            font-family: 'DM Mono', monospace;
-            background: var(--navy-deep);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* HEADER SECTION */
-        .header {
-            padding: 40px 20px 20px;
-            text-align: center;
-            border-bottom: 1px solid var(--gold-dim);
-        }
-        .logo-name {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 32px;
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-        .logo-sub {
-            font-size: 10px;
-            letter-spacing: 3px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .scroll-area { padding: 20px; }
-
-        /* SECTION LABELS */
-        .section-label {
-            font-size: 12px;
-            letter-spacing: 2px;
-            color: var(--gold);
-            text-transform: uppercase;
-            margin: 30px 0 15px;
-            border-bottom: 1px solid var(--gold-dim);
-            padding-bottom: 8px;
-        }
-
-        /* GRID TILES */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-        .tile {
-            background: var(--navy-card);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 15px 5px;
-            text-align: center;
-            text-decoration: none;
-            color: white;
-        }
-        .tile-icon { font-size: 24px; margin-bottom: 8px; display: block; }
-        .tile-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-
-        /* LABOR CARD */
-        .labor-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: 20px;
-        }
-        .labor-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
-        .input-group label { font-size: 8px; text-transform: uppercase; color: var(--text-muted); }
-        .labor-input {
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            color: white;
-            padding: 10px;
-            font-family: 'DM Mono';
-            font-size: 14px;
-            outline: none;
-        }
-        .wage-input { border-color: var(--gold-dim); font-size: 16px; }
-
-        .result-box {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(197, 160, 33, 0.05);
-            border-radius: 12px;
-            border: 1px dashed var(--gold-dim);
-            text-align: center;
-        }
-        #wage-result { font-size: 28px; color: var(--gold); display: block; margin-top: 4px; }
-
-        .btn-save {
-            width: 100%;
-            background: var(--gold);
-            border: none;
-            border-radius: 10px;
-            color: var(--navy-deep);
-            padding: 14px;
-            font-family: 'DM Mono';
-            font-weight: 700;
-            font-size: 10px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-top: 15px;
-        }
-
-        /* CHECKLIST */
-        .checklist-item {
-            background: var(--navy-card);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .time-badge {
-            background: var(--gold-dim);
-            color: var(--gold);
-            font-size: 9px;
-            padding: 4px 8px;
-            border-radius: 5px;
-        }
+        :root { --navy: #0D1420; --card: #1A2438; --gold: #C5A021; --gold-dim: rgba(197, 160, 33, 0.2); }
+        body { font-family: 'DM Mono', monospace; background: var(--navy); color: white; margin: 0; padding: 20px; padding-bottom: 100px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 1px solid var(--gold-dim); margin-bottom: 20px; }
+        .logo { font-family: 'Cormorant Garamond'; font-size: 32px; letter-spacing: 8px; text-transform: uppercase; }
+        .section-label { color: var(--gold); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 30px 0 15px; display: block; border-bottom: 1px solid var(--gold-dim); padding-bottom: 5px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .tile { background: var(--card); padding: 15px 5px; border-radius: 12px; text-align: center; text-decoration: none; color: white; font-size: 9px; border: 1px solid rgba(255,255,255,0.05); }
+        .tile span { display: block; font-size: 20px; margin-bottom: 5px; }
+        .labor-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; }
+        .l-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input { background: #000; border: 1px solid #444; border-radius: 8px; color: white; padding: 12px; font-family: 'DM Mono'; font-size: 16px; width: 100%; box-sizing: border-box; }
+        .result { margin-top: 15px; padding: 15px; background: var(--gold-dim); border-radius: 12px; text-align: center; }
+        #wage-result { font-size: 32px; color: var(--gold); font-weight: bold; }
+        .btn { width: 100%; background: var(--gold); color: var(--navy); border: none; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 15px; font-family: 'DM Mono'; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="logo-name">Jesmond</div>
-    <div class="logo-sub">Newcastle, Australia</div>
+    <div class="logo">Jesmond</div>
+    <div style="font-size: 9px; letter-spacing: 3px; opacity: 0.5;">MANAGER HUB</div>
 </div>
 
-<div class="scroll-area">
-    <div class="section-label">Manager Hub</div>
-    <div class="grid">
-        <a href="https://hoteljesmond.au.deputy.com" class="tile"><span class="tile-icon">📅</span><span class="tile-label">Deputy</span></a>
-        <a href="#" class="tile"><span class="tile-icon">📺</span><span class="tile-label">Sound</span></a>
-        <a href="https://restaurant.nowbookit.com" class="tile"><span class="tile-icon">🍽️</span><span class="tile-label">Bistro</span></a>
-        <a href="https://login.newbook.cloud" class="tile"><span class="tile-icon">🏨</span><span class="tile-label">Rooms</span></a>
-        <a href="https://managemynightlife.com" class="tile"><span class="tile-icon">🎵</span><span class="tile-label">Music</span></a>
-        <a href="https://app.wirely.com.au" class="tile"><span class="tile-icon">📈</span><span class="tile-label">POS</span></a>
-    </div>
-
-    <div class="section-label">Managers Checklist</div>
-    <div class="checklist-item">
-        <span class="time-badge">10:00 AM</span>
-        <span style="font-size: 12px;">Safe Count & Sign On</span>
-    </div>
-    <div class="checklist-item">
-        <span class="time-badge">05:00 PM</span>
-        <span style="font-size: 12px;">Vibe Check (Lights/Audio)</span>
-    </div>
-
-    <div class="section-label">Labor Performance</div>
-    <div class="labor-card">
-        <div class="labor-grid">
-            <div class="input-group" style="grid-column: span 2;">
-                <label>Gross Wages ($)</label>
-                <input type="number" id="inp-wages" class="labor-input wage-input" placeholder="36492.34">
-            </div>
-            <div class="input-group"><label>Gaming</label><input type="number" id="inp-gaming" class="labor-input" placeholder="82600"></div>
-            <div class="input-group"><label>Beverage</label><input type="number" id="inp-bar" class="labor-input" placeholder="47703"></div>
-            <div class="input-group"><label>Food</label><input type="number" id="inp-food" class="labor-input" placeholder="40676"></div>
-            <div class="input-group"><label>Accomm</label><input type="number" id="inp-acc" class="labor-input" placeholder="9462"></div>
-        </div>
-        
-        <div class="result-box">
-            <label style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Wage Cost %</label>
-            <span id="wage-result">0.00%</span>
-        </div>
-
-        <button id="btn-save-labor" class="btn-save">Save Weekly Data</button>
-    </div>
+<div class="grid">
+    <a href="https://hoteljesmond.au.deputy.com" class="tile"><span>📅</span>DEPUTY</a>
+    <a href="https://app.wirely.com.au" class="tile"><span>📊</span>WIRELY</a>
+    <a href="https://restaurant.nowbookit.com" class="tile"><span>🍽️</span>BISTRO</a>
 </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+<div class="section-label">Labor Cost Tracker</div>
+<div class="labor-card">
+    <div class="l-grid">
+        <div style="grid-column: span 2;">
+            <label style="font-size: 9px; opacity: 0.5;">GROSS WAGES ($)</label>
+            <input type="number" id="w" placeholder="36492.34" style="border-color: var(--gold);">
+        </div>
+        <div><label style="font-size: 9px; opacity: 0.5;">GAMING</label><input type="number" id="g" placeholder="82600"></div>
+        <div><label style="font-size: 9px; opacity: 0.5;">BEV</label><input type="number" id="b" placeholder="47703"></div>
+        <div><label style="font-size: 9px; opacity: 0.5;">FOOD</label><input type="number" id="f" placeholder="40676"></div>
+        <div><label style="font-size: 9px; opacity: 0.5;">ACC</label><input type="number" id="a" placeholder="9462"></div>
+    </div>
+    <div class="result">
+        <div style="font-size: 10px; opacity: 0.6;">CURRENT WAGE %</div>
+        <div id="wage-result">0.00%</div>
+    </div>
+    <button class="btn" onclick="saveData()">Save Weekly Stats</button>
+</div>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyC1-n25spgY3epta_ANquA9Gm0Ppo7ttsY",
-        authDomain: "hotel-jesmond-hub.firebaseapp.com",
-        projectId: "hotel-jesmond-hub",
-        storageBucket: "hotel-jesmond-hub.firebasestorage.app",
-        messagingSenderId: "61051163173",
-        appId: "1:61051163173:web:56a0c8f634a67881b5a5cc"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const inputs = ['inp-wages', 'inp-gaming', 'inp-bar', 'inp-food', 'inp-acc'];
-    
-    function calculate() {
-        const wages = parseFloat(document.getElementById('inp-wages').value) || 0;
-        const rev = inputs.slice(1).reduce((sum, id) => sum + (parseFloat(document.getElementById(id).value) || 0), 0);
-        const res = document.getElementById('wage-result');
-        if (rev > 0) {
-            const pct = (wages / rev) * 100;
-            res.innerText = pct.toFixed(2) + '%';
-            res.style.color = pct < 22 ? '#10B981' : (pct < 30 ? '#C5A021' : '#E11D48');
-            return pct;
-        }
-        res.innerText = '0.00%';
-        return 0;
-    }
-
-    inputs.forEach(id => document.getElementById(id).addEventListener('input', calculate));
-
-    document.getElementById('btn-save-labor').addEventListener('click', async () => {
-        const wages = parseFloat(document.getElementById('inp-wages').value) || 0;
-        const pct = calculate();
-        if (wages === 0 || pct === 0) return alert("Enter data first!");
-
-        try {
-            await addDoc(collection(db, "labor_stats"), {
-                timestamp: new Date(),
-                wages: wages,
-                percentage: pct
-            });
-            alert("Weekly labor data saved to Firebase!");
-        } catch (e) { alert("Error saving data."); }
+<script>
+    const ids = ['w', 'g', 'b', 'f', 'a'];
+    ids.forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+            const wages = parseFloat(document.getElementById('w').value) || 0;
+            const rev = ids.slice(1).reduce((s, i) => s + (parseFloat(document.getElementById(i).value) || 0), 0);
+            const res = document.getElementById('wage-result');
+            if (rev > 0) {
+                const pct = (wages / rev) * 100;
+                res.innerText = pct.toFixed(2) + '%';
+                res.style.color = pct < 21 ? '#10B981' : (pct < 28 ? '#C5A021' : '#ff4444');
+            }
+        });
     });
+    function saveData() { alert('Data saving initialized...'); }
 </script>
 
 </body>

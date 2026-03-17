@@ -1,6 +1,6 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { getFirestore, collection, doc, setDoc, deleteDoc, query, onSnapshot, serverTimestamp, addDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyC1-n25spgY3epta_ANquA9Gm0Ppo7ttsY",
@@ -14,93 +14,103 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- CHECKLIST LOGIC ---
-    window.toggleItem = function(el) {
-        el.classList.toggle('checked');
+    // --- SYNCED CHECKLIST LOGIC ---
+    window.syncToggle = async function(taskId, taskName, taskTime) {
+        const name = document.getElementById('checker-name').value;
+        const el = document.getElementById(taskId);
+        
+        if (!el.classList.contains('checked')) {
+            if (!name) return alert("Enter your name first!");
+            
+            await setDoc(doc(db, "active_checklist", taskId), {
+                completedBy: name,
+                completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                timestamp: serverTimestamp()
+            });
+        } else {
+            await deleteDoc(doc(db, "active_checklist", taskId));
+        }
+    };
+
+    // Listen for Checklist updates
+    onSnapshot(collection(db, "active_checklist"), (snapshot) => {
+        // Reset all first
+        document.querySelectorAll('.checklist-item').forEach(item => {
+            item.classList.remove('checked');
+            item.querySelector('.completion-stamp').style.display = 'none';
+        });
+
+        snapshot.forEach((doc) => {
+            const taskId = doc.id;
+            const data = doc.data();
+            const el = document.getElementById(taskId);
+            if (el) {
+                const stamp = el.querySelector('.completion-stamp');
+                el.classList.add('checked');
+                stamp.innerText = `Done by ${data.completedBy} at ${data.completedAt}`;
+                stamp.style.display = 'block';
+            }
+        });
         updateProgress();
+    });
+
+    window.resetChecklist = async function() {
+        if (!confirm("Clear all checks for the next shift?")) return;
+        const snapshot = await onSnapshot(collection(db, "active_checklist"), (s) => {}); // Get current
+        // Note: For simplicity in this script, we delete by ID. 
+        // In a real app, you'd loop through and delete.
+        const ids = ['task-safe-count', 'task-cellar', 'task-vibe'];
+        for (const id of ids) { await deleteDoc(doc(db, "active_checklist", id)); }
     };
 
     function updateProgress() {
-        const total = document.querySelectorAll('.checklist-item').length;
+        const total = 3;
         const done = document.querySelectorAll('.checklist-item.checked').length;
         document.getElementById('progress-bar').style.width = (done/total * 100) + '%';
         document.getElementById('progress-text').innerText = done + ' / ' + total;
+        document.getElementById('btn-reset-checklist').style.display = done > 0 ? 'block' : 'none';
     }
 
-    // --- HANDOVER LOGIC (FIREBASE SYNC) ---
+    // --- HANDOVER LOGIC (STAMPED) ---
     window.addHandoverNote = async function() {
         const nameInput = document.getElementById('log-name');
         const textInput = document.getElementById('log-text');
-        
-        if (!nameInput.value || !textInput.value) {
-            alert("Please enter both a name and a note.");
-            return;
-        }
+        if (!nameInput.value || !textInput.value) return alert("Enter name and note.");
 
-        try {
-            await addDoc(collection(db, "handover_notes"), {
-                name: nameInput.value,
-                note: textInput.value,
-                timestamp: serverTimestamp()
-            });
-            textInput.value = ""; // Clear only the note, keep the name for the next post
-        } catch (e) {
-            console.error("Error adding note: ", e);
-        }
+        await addDoc(collection(db, "handover_notes"), {
+            name: nameInput.value,
+            note: textInput.value,
+            timestamp: serverTimestamp()
+        });
+        textInput.value = "";
     };
 
-    // Listen for new notes in real-time
-    const q = query(collection(db, "handover_notes"), orderBy("timestamp", "desc"), limit(15));
-    onSnapshot(q, (snapshot) => {
+    const qNotes = query(collection(db, "handover_notes"), orderBy("timestamp", "desc"), limit(10));
+    onSnapshot(qNotes, (snapshot) => {
         const feed = document.getElementById('handover-feed');
-        feed.innerHTML = ""; // Clear current view
+        feed.innerHTML = "";
         snapshot.forEach((doc) => {
             const data = doc.data();
-            const timeStr = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now";
-            
+            const time = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now";
             const noteDiv = document.createElement('div');
-            noteDiv.style.cssText = "background: rgba(255,255,255,0.03); border-left: 3px solid var(--gold); padding: 12px; border-radius: 4px; margin-bottom: 10px;";
-            noteDiv.innerHTML = `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span style="font-size: 10px; color: var(--gold); font-weight: bold; text-transform: uppercase;">${data.name}</span>
-                    <span style="font-size: 9px; opacity: 0.5;">${timeStr}</span>
-                </div>
-                <div style="font-size: 12px; line-height: 1.4;">${data.note}</div>
-            `;
+            noteDiv.style.cssText = "background: rgba(255,255,255,0.03); border-left: 3px solid var(--gold); padding: 10px; border-radius: 4px; margin-bottom: 8px;";
+            noteDiv.innerHTML = `<div style="display:flex; justify-content:space-between;"><span style="font-size:10px; color:var(--gold); font-weight:bold;">${data.name}</span><span style="font-size:9px; opacity:0.5;">${time}</span></div><div style="font-size:12px; margin-top:3px;">${data.note}</div>`;
             feed.appendChild(noteDiv);
         });
     });
 
-    // --- LABOR CALC LOGIC ---
-    const ids = ['w', 'g', 'b', 'f', 'a'];
-    ids.forEach(id => {
+    // --- LABOR CALC ---
+    const lIds = ['w', 'g', 'b', 'f', 'a'];
+    lIds.forEach(id => {
         document.getElementById(id).addEventListener('input', () => {
             const wages = parseFloat(document.getElementById('w').value) || 0;
-            const rev = ids.slice(1).reduce((s, i) => s + (parseFloat(document.getElementById(i).value) || 0), 0);
+            const rev = lIds.slice(1).reduce((s, i) => s + (parseFloat(document.getElementById(i).value) || 0), 0);
             const res = document.getElementById('wage-result');
             if (rev > 0) {
                 const pct = (wages / rev) * 100;
                 res.innerText = pct.toFixed(2) + '%';
                 res.style.color = pct < 21 ? '#10B981' : (pct < 28 ? '#C5A021' : '#ff4444');
-            } else { res.innerText = '0.00%'; }
+            }
         });
     });
-
-    window.saveLaborData = async function() {
-        const wages = parseFloat(document.getElementById('w').value) || 0;
-        const rev = ids.slice(1).reduce((s, i) => s + (parseFloat(document.getElementById(i).value) || 0), 0);
-        if (wages === 0 || rev === 0) return alert("Enter data first!");
-
-        try {
-            await addDoc(collection(db, "labor_stats"), {
-                timestamp: serverTimestamp(),
-                wages: wages,
-                total_rev: rev,
-                percentage: (wages/rev) * 100
-            });
-            alert("Weekly labor stats saved!");
-        } catch (e) { alert("Error saving labor data."); }
-    };
-
-    updateProgress();
 </script>

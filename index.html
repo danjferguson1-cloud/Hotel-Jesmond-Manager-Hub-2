@@ -13,13 +13,14 @@
         .section-label { color: var(--gold); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 25px 0 15px; display: block; border-bottom: 1px solid var(--gold-dim); padding-bottom: 5px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .tile { background: var(--card); padding: 15px 5px; border-radius: 12px; text-align: center; text-decoration: none; color: white; border: 1px solid var(--border); }
-        .checklist-item { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .checklist-item { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .checkbox { width: 24px; height: 24px; border: 2px solid var(--gold-dim); border-radius: 6px; }
+        .checked { border-color: var(--gold); }
         .checked .checkbox { background: var(--gold); border-color: var(--gold); position: relative; }
         .checked .checkbox::after { content: '✓'; color: var(--navy); font-weight: bold; position: absolute; left: 5px; top: 1px; }
         input, textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; color: white; padding: 12px; font-family: 'DM Mono'; margin-bottom: 10px; box-sizing: border-box; outline: none; }
         .btn-gold { width: 100%; background: var(--gold); color: var(--navy); border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-family: 'DM Mono'; text-transform: uppercase; cursor: pointer; }
-        .labor-card { background: rgba(255,255,255,0.03); border: 1px solid var(--gold-dim); border-radius: 15px; padding: 15px; }
+        .stamp { font-size: 9px; color: var(--gold); margin-top: 4px; display: none; }
     </style>
 </head>
 <body>
@@ -36,43 +37,28 @@
 </div>
 
 <div class="section-label">Checklist</div>
-<input type="text" id="checker-name" placeholder="Enter Your Name First">
+<input type="text" id="user-name" placeholder="Enter Your Name First">
 
 <div id="checklist">
-    <div class="checklist-item" id="task-safe" onclick="handleToggle('task-safe')">
-        <div><span style="color:var(--gold); font-size:10px;">10:00 AM</span><br><span style="font-size:13px;">Safe Count</span><div class="stamp" style="font-size:9px; color:var(--gold); display:none;"></div></div>
+    <div class="checklist-item" id="task1" onclick="toggleTask('task1')">
+        <div><span style="color:var(--gold); font-size:10px;">10:00 AM</span><br><span style="font-size:13px;">Safe Count</span><div class="stamp"></div></div>
         <div class="checkbox"></div>
     </div>
-    <div class="checklist-item" id="task-cellar" onclick="handleToggle('task-cellar')">
-        <div><span style="color:var(--gold); font-size:10px;">11:30 AM</span><br><span style="font-size:13px;">Cellar Check</span><div class="stamp" style="font-size:9px; color:var(--gold); display:none;"></div></div>
+    <div class="checklist-item" id="task2" onclick="toggleTask('task2')">
+        <div><span style="color:var(--gold); font-size:10px;">11:30 AM</span><br><span style="font-size:13px;">Cellar Check</span><div class="stamp"></div></div>
         <div class="checkbox"></div>
     </div>
-    <div class="checklist-item" id="task-vibe" onclick="handleToggle('task-vibe')">
-        <div><span style="color:var(--gold); font-size:10px;">05:00 PM</span><br><span style="font-size:13px;">Vibe Check (Lights/Music/Footy)</span><div class="stamp" style="font-size:9px; color:var(--gold); display:none;"></div></div>
+    <div class="checklist-item" id="task3" onclick="toggleTask('task3')">
+        <div><span style="color:var(--gold); font-size:10px;">05:00 PM</span><br><span style="font-size:13px;">Vibe Check (Lights/Music/Footy)</span><div class="stamp"></div></div>
         <div class="checkbox"></div>
     </div>
 </div>
 
 <div class="section-label">Handover Notes</div>
-<input type="text" id="log-name" placeholder="Manager Name">
-<textarea id="log-text" rows="3" placeholder="Shift notes..."></textarea>
-<button class="btn-gold" onclick="sendNote()">Post Note</button>
-<div id="handover-feed" style="margin-top:15px;"></div>
-
-<div class="section-label">Labor Tracker</div>
-<div class="labor-card">
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-        <div style="grid-column: span 2;"><label style="font-size:8px; opacity:0.5;">WAGES $</label><input type="number" id="labor-w" class="calc" placeholder="0.00"></div>
-        <div><label style="font-size:8px; opacity:0.5;">GAMING</label><input type="number" id="labor-g" class="calc" placeholder="0.00"></div>
-        <div><label style="font-size:8px; opacity:0.5;">BEV</label><input type="number" id="labor-b" class="calc" placeholder="0.00"></div>
-        <div><label style="font-size:8px; opacity:0.5;">FOOD</label><input type="number" id="labor-f" class="calc" placeholder="0.00"></div>
-        <div><label style="font-size:8px; opacity:0.5;">ACC</label><input type="number" id="labor-a" class="calc" placeholder="0.00"></div>
-    </div>
-    <div style="text-align:center; margin-top:15px; padding:15px; background:var(--gold-dim); border-radius:10px;">
-        <div style="font-size:9px; opacity:0.6;">CURRENT WAGE %</div>
-        <div id="wage-pct" style="font-size:28px; color:var(--gold); font-weight:bold;">0.00%</div>
-    </div>
-</div>
+<input type="text" id="mgr-name" placeholder="Manager Name">
+<textarea id="mgr-note" rows="3" placeholder="Shift notes..."></textarea>
+<button class="btn-gold" id="post-btn">Post Note</button>
+<div id="feed" style="margin-top:15px;"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -88,55 +74,61 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    window.handleToggle = async function(id) {
-        const n = document.getElementById('checker-name').value;
-        const el = document.getElementById(id);
-        if (!el.classList.contains('checked')) {
-            if (!n) return alert("Please enter your name first!");
-            await setDoc(doc(db, "active_checklist", id), { name: n, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-        } else { await deleteDoc(doc(db, "active_checklist", id)); }
+    // --- CHECKLIST LOGIC ---
+    window.toggleTask = async function(taskId) {
+        const nameInput = document.getElementById('user-name').value;
+        const taskEl = document.getElementById(taskId);
+        
+        if (!taskEl.classList.contains('checked')) {
+            if (!nameInput) { alert("Please enter your name at the top first!"); return; }
+            await setDoc(doc(db, "active_checklist", taskId), { 
+                doneBy: nameInput, 
+                doneAt: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) 
+            });
+        } else {
+            await deleteDoc(doc(db, "active_checklist", taskId));
+        }
     };
 
     onSnapshot(collection(db, "active_checklist"), (snap) => {
-        document.querySelectorAll('.checklist-item').forEach(i => { i.classList.remove('checked'); i.querySelector('.stamp').style.display='none'; });
+        document.querySelectorAll('.checklist-item').forEach(item => {
+            item.classList.remove('checked');
+            item.querySelector('.stamp').style.display = 'none';
+        });
         snap.forEach(d => {
             const el = document.getElementById(d.id);
             if (el) {
                 el.classList.add('checked');
                 const s = el.querySelector('.stamp');
-                s.innerText = `Done by ${d.data().name} @ ${d.data().time}`;
+                s.innerText = `Done by ${d.data().doneBy} @ ${d.data().doneAt}`;
                 s.style.display = 'block';
             }
         });
     });
 
-    window.sendNote = async function() {
-        const n = document.getElementById('log-name');
-        const t = document.getElementById('log-text');
-        if (n.value && t.value) {
-            await addDoc(collection(db, "handover_notes"), { name: n.value, note: t.value, timestamp: serverTimestamp() });
-            t.value = "";
-        }
-    };
-
-    onSnapshot(query(collection(db, "handover_notes"), orderBy("timestamp", "desc"), limit(8)), (snap) => {
-        const feed = document.getElementById('handover-feed'); feed.innerHTML = "";
-        snap.forEach(d => {
-            const div = document.createElement('div');
-            div.style.cssText = "background:var(--card); padding:12px; border-radius:10px; margin-bottom:10px; border-left:3px solid var(--gold);";
-            div.innerHTML = `<div style="font-size:10px; color:var(--gold); font-weight:bold; margin-bottom:4px;">${d.data().name}</div><div style="font-size:12px;">${d.data().note}</div>`;
-            feed.appendChild(div);
-        });
+    // --- HANDOVER LOGIC ---
+    document.getElementById('post-btn').addEventListener('click', async () => {
+        const n = document.getElementById('mgr-name').value;
+        const t = document.getElementById('mgr-note').value;
+        if (n && t) {
+            await addDoc(collection(db, "handover_notes"), { 
+                name: n, 
+                note: t, 
+                timestamp: serverTimestamp() 
+            });
+            document.getElementById('mgr-note').value = "";
+        } else { alert("Enter name and note!"); }
     });
 
-    document.querySelectorAll('.calc').forEach(input => {
-        input.addEventListener('input', () => {
-            const wages = parseFloat(document.getElementById('labor-w').value) || 0;
-            const rev = (parseFloat(document.getElementById('labor-g').value) || 0) + (parseFloat(document.getElementById('labor-b').value) || 0) + (parseFloat(document.getElementById('labor-f').value) || 0) + (parseFloat(document.getElementById('labor-a').value) || 0);
-            if (rev > 0) {
-                const pct = (wages / rev) * 100;
-                document.getElementById('wage-pct').innerText = pct.toFixed(2) + '%';
-            }
+    onSnapshot(query(collection(db, "handover_notes"), orderBy("timestamp", "desc"), limit(8)), (snap) => {
+        const feedEl = document.getElementById('feed');
+        feedEl.innerHTML = "";
+        snap.forEach(d => {
+            const data = d.data();
+            const div = document.createElement('div');
+            div.style.cssText = "background:var(--card); padding:12px; border-radius:10px; margin-bottom:10px; border-left:3px solid var(--gold);";
+            div.innerHTML = `<div style="font-size:10px; color:var(--gold); font-weight:bold;">${data.name}</div><div style="font-size:12px;">${data.note}</div>`;
+            feedEl.appendChild(div);
         });
     });
 </script>

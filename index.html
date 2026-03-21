@@ -1056,7 +1056,22 @@
             try {
                 await addEntry(text, staff);
                 if (noteInput) { noteInput.value = ''; noteInput.style.height = 'auto'; }
-            } catch(e) { console.warn('Note save failed', e); }
+            } catch(e) {
+                console.error('Note save failed:', e);
+                // Show error to user
+                if (noteBtn) {
+                    noteBtn.style.background = 'var(--alert)';
+                    noteBtn.innerText = '!';
+                    setTimeout(() => { noteBtn.style.background = ''; noteBtn.innerText = '＋'; }, 3000);
+                }
+                // Show error message below log
+                const errDiv = document.createElement('div');
+                errDiv.style.cssText = 'padding:10px 16px;font-size:11px;color:var(--alert);letter-spacing:1px;text-align:center;';
+                errDiv.innerText = 'Could not save — check Firebase rules (allow read, write: if true)';
+                const footer = document.getElementById('log-entries');
+                if (footer) footer.after(errDiv);
+                setTimeout(() => errDiv.remove(), 6000);
+            }
             if (noteBtn) { noteBtn.disabled = false; noteBtn.innerText = '＋'; }
         }
 

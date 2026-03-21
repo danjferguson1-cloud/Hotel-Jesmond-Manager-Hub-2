@@ -786,59 +786,53 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc, updateDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-    const firebaseConfig = {
+    // ===== FIREBASE SETUP =====
+    const app = initializeApp({
         apiKey: "AIzaSyC1-n25spgY3epta_ANquA9Gm0Ppo7ttsY",
         authDomain: "hotel-jesmond-hub.firebaseapp.com",
         projectId: "hotel-jesmond-hub",
         storageBucket: "hotel-jesmond-hub.firebasestorage.app",
         messagingSenderId: "61051163173",
         appId: "1:61051163173:web:56a0c8f634a67881b5a5cc"
-    };
-
-    const app = initializeApp(firebaseConfig);
+    });
     const db = getFirestore(app);
 
+    // ===== CONSTANTS =====
     const tasks = ['safe', 'cellar', 'vibe', 'sec', 'safe2'];
+    const todayKey = () => new Date().toISOString().split('T')[0];
+
+    // ===== ALERT =====
     let hasNotifiedToday = false;
     let isTesting = false;
     let lastRepeatMinute = -1;
-
     const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
-    alertSound.volume = 1.0;
-
-    // ===== HELPERS =====
-    const todayKey = () => new Date().toISOString().split('T')[0];
 
     function flashScreen() {
-        const flash = document.createElement('div');
-        flash.style.cssText = 'position:fixed;inset:0;background:#E11D48;z-index:99998;pointer-events:none;animation:screenFlash 0.6s ease forwards;';
-        document.body.appendChild(flash);
-        setTimeout(() => flash.remove(), 600);
+        const el = document.createElement('div');
+        el.style.cssText = 'position:fixed;inset:0;background:#E11D48;z-index:99998;pointer-events:none;animation:screenFlash 0.6s ease forwards;';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 600);
     }
 
     function triggerAlertEffects() {
         alertSound.currentTime = 0;
         alertSound.play().catch(() => {});
-        if (Notification.permission === "granted") {
-            new Notification("🚨 Hotel Jesmond: Vibe Check!", { body: "Time to adjust lights and audio!", requireInteraction: true });
+        if (Notification.permission === 'granted') {
+            new Notification('🚨 Hotel Jesmond: Vibe Check!', { body: 'Time to adjust lights and audio!', requireInteraction: true });
         }
-        if ("vibrate" in navigator) navigator.vibrate([300, 100, 300, 100, 300, 200, 500]);
+        if ('vibrate' in navigator) navigator.vibrate([300,100,300,100,300,200,500]);
         flashScreen();
         setTimeout(flashScreen, 800);
         setTimeout(flashScreen, 1600);
     }
 
-    // ===== PROGRESS BAR =====
+    // ===== CHECKLIST =====
     function updateProgress() {
-        const done = tasks.filter(k => {
-            const el = document.getElementById('c-' + k);
-            return el && el.checked;
-        }).length;
-        const pct = (done / tasks.length) * 100;
+        const done = tasks.filter(k => { const el = document.getElementById('c-' + k); return el && el.checked; }).length;
         const fill = document.getElementById('progress-fill');
-        const pctEl = document.getElementById('progress-pct');
-        if (fill) fill.style.width = pct + '%';
-        if (pctEl) pctEl.textContent = done + ' / ' + tasks.length;
+        const pct = document.getElementById('progress-pct');
+        if (fill) fill.style.width = (done / tasks.length * 100) + '%';
+        if (pct) pct.textContent = done + ' / ' + tasks.length;
     }
 
     function updateTaskStyles() {
@@ -849,17 +843,13 @@
         });
     }
 
-    // ===== FIREBASE CHECKLIST =====
-    async function saveTaskToFirebase(taskKey, checked) {
-        try {
-            const ref = doc(db, 'checklist', todayKey());
-            await setDoc(ref, { [taskKey]: checked }, { merge: true });
-        } catch(e) { console.warn('Checklist save failed', e); }
+    async function saveTask(key, checked) {
+        try { await setDoc(doc(db, 'checklist', todayKey()), { [key]: checked }, { merge: true }); }
+        catch(e) { console.warn('Save task failed', e); }
     }
 
-    function listenToChecklist() {
-        const ref = doc(db, 'checklist', todayKey());
-        onSnapshot(ref, (snap) => {
+    function listenChecklist() {
+        onSnapshot(doc(db, 'checklist', todayKey()), snap => {
             if (snap.exists()) {
                 const data = snap.data();
                 tasks.forEach(k => {
@@ -872,17 +862,14 @@
         });
     }
 
-    // ===== DAILY RESET =====
     async function checkDailyReset() {
         const now = new Date();
         const today = now.toDateString();
-        const lastReset = localStorage.getItem('hj-last-reset');
-        if (now.getHours() >= 4 && lastReset !== today) {
+        if (now.getHours() >= 4 && localStorage.getItem('hj-last-reset') !== today) {
             try {
-                const ref = doc(db, 'checklist', todayKey());
-                const resetData = {};
-                tasks.forEach(k => resetData[k] = false);
-                await setDoc(ref, resetData);
+                const reset = {};
+                tasks.forEach(k => reset[k] = false);
+                await setDoc(doc(db, 'checklist', todayKey()), reset);
                 localStorage.setItem('hj-last-reset', today);
             } catch(e) { console.warn('Reset failed', e); }
         }
@@ -893,49 +880,41 @@
         const now = new Date();
         const h = now.getHours();
         const m = now.getMinutes();
-        const vibeDone = document.getElementById('c-vibe');
-        const isVibeTime = (h === 17);
-        const showAlert = isTesting || (isVibeTime && vibeDone && !vibeDone.checked);
+        const vibe = document.getElementById('c-vibe');
+        const isVibeTime = h === 17;
+        const show = isTesting || (isVibeTime && vibe && !vibe.checked);
         const alertEl = document.getElementById('alert-top');
         const rowVibe = document.getElementById('row-vibe');
-        if (alertEl) alertEl.style.display = showAlert ? 'block' : 'none';
-        if (rowVibe) rowVibe.classList.toggle('active-alert', isVibeTime && vibeDone && !vibeDone.checked);
-        if (isVibeTime && vibeDone && !vibeDone.checked) {
-            const repeatSlot = Math.floor(m / 5);
-            if (!hasNotifiedToday || lastRepeatMinute !== repeatSlot) {
+        if (alertEl) alertEl.style.display = show ? 'block' : 'none';
+        if (rowVibe) rowVibe.classList.toggle('active-alert', isVibeTime && vibe && !vibe.checked);
+        if (isVibeTime && vibe && !vibe.checked) {
+            const slot = Math.floor(m / 5);
+            if (!hasNotifiedToday || lastRepeatMinute !== slot) {
                 triggerAlertEffects();
                 hasNotifiedToday = true;
-                lastRepeatMinute = repeatSlot;
+                lastRepeatMinute = slot;
             }
         }
         if (h !== 17) { hasNotifiedToday = false; lastRepeatMinute = -1; }
     }
 
     // ===== HANDOVER LOG =====
-    function formatLogTime(ts) {
-        const d = new Date(ts);
-        return {
-            time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
-            date: d.toLocaleDateString([], { day: 'numeric', month: 'short' })
-        };
-    }
-
     function renderLog(entries) {
         const container = document.getElementById('log-entries');
         const empty = document.getElementById('log-empty');
         if (!container) return;
         container.querySelectorAll('.log-entry').forEach(e => e.remove());
-        if (!entries || entries.length === 0) {
+        if (!entries.length) {
             if (empty) empty.style.display = 'block';
             return;
         }
         if (empty) empty.style.display = 'none';
-        [...entries].sort((a, b) => b.ts - a.ts).forEach((entry) => {
-            const { time, date } = formatLogTime(entry.ts);
-            const staffBadge = entry.staff ? `<div class="log-staff">${entry.staff}</div>` : '';
+        entries.forEach(entry => {
+            const d = new Date(entry.ts);
+            const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+            const date = d.toLocaleDateString([], { day: 'numeric', month: 'short' });
             const div = document.createElement('div');
             div.className = 'log-entry' + (entry.completed ? ' completed' : '');
-            div.dataset.id = entry.id;
             div.innerHTML = `
                 <div class="log-meta">
                     <div class="log-time">${time}</div>
@@ -943,163 +922,140 @@
                     <div class="log-dot"></div>
                 </div>
                 <div style="flex:1">
-                    ${staffBadge}
+                    ${entry.staff ? `<div class="log-staff">${entry.staff}</div>` : ''}
                     <div class="log-text">${entry.text}</div>
                 </div>
                 <button class="log-complete" title="Mark complete">✓</button>
                 <button class="log-delete" title="Delete">×</button>
             `;
-            div.querySelector('.log-delete').addEventListener('click', () => deleteEntry(entry.id));
-            div.querySelector('.log-complete').addEventListener('click', () => toggleComplete(entry.id, entry.completed));
+            div.querySelector('.log-delete').onclick = async () => {
+                try { await deleteDoc(doc(db, 'handover', entry.id)); } catch(e) {}
+            };
+            div.querySelector('.log-complete').onclick = async () => {
+                try { await updateDoc(doc(db, 'handover', entry.id), { completed: !entry.completed }); } catch(e) {}
+            };
             container.appendChild(div);
         });
     }
 
-    let logListenerActive = false;
-    function listenToLog() {
-        if (logListenerActive) return;
-        logListenerActive = true;
-        const q = query(collection(db, 'handover'), orderBy('ts', 'desc'));
-        onSnapshot(q, (snap) => {
+    function listenLog() {
+        onSnapshot(query(collection(db, 'handover'), orderBy('ts', 'desc')), snap => {
             const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderLog(entries);
         });
     }
 
-    async function addEntry(text, staff) {
-        if (!text.trim()) return;
-        await addDoc(collection(db, 'handover'), {
-            ts: Date.now(),
-            text: text.trim(),
-            staff: staff.trim(),
-            completed: false
-        });
-    }
-
-    async function toggleComplete(id, current) {
-        try { await updateDoc(doc(db, 'handover', id), { completed: !current }); }
-        catch(e) { console.warn('Toggle failed', e); }
-    }
-
-    async function deleteEntry(id) {
-        try { await deleteDoc(doc(db, 'handover', id)); }
-        catch(e) { console.warn('Delete failed', e); }
-    }
-
-    async function clearLog() {
-        if (confirm('Clear all handover entries?')) {
-            const snap = await getDocs(query(collection(db, 'handover')));
-            snap.forEach(async d => await deleteDoc(d.ref));
-        }
-    }
-
-    // ===== INIT — runs after DOM is ready =====
+    // ===== INIT =====
     window.addEventListener('load', async () => {
 
-        // Clock — updates every second
-        function updateClock() {
-            const el = document.getElementById('clock');
-            if (el) el.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-        }
-        updateClock();
-        setInterval(updateClock, 1000);
-
-        // Vibe check — runs every 5 seconds
-        checkVibe();
-        setInterval(checkVibe, 5000);
+        // Clock
+        const clockEl = document.getElementById('clock');
+        function tick() { if (clockEl) clockEl.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); }
+        tick();
+        setInterval(tick, 1000);
 
         // Notifications
-        if ("Notification" in window) Notification.requestPermission();
+        if ('Notification' in window) Notification.requestPermission();
 
         // Checkboxes
         tasks.forEach(k => {
             const el = document.getElementById('c-' + k);
             if (!el) return;
-            el.addEventListener('change', async () => {
+            el.addEventListener('change', () => {
                 updateProgress();
                 updateTaskStyles();
-                await saveTaskToFirebase(k, el.checked);
+                saveTask(k, el.checked);
             });
         });
 
-        // Firebase listeners
+        // Firebase
         await checkDailyReset();
-        listenToChecklist();
-        listenToLog();
+        listenChecklist();
+        listenLog();
 
-        // Staff name memory
+        // Vibe check
+        checkVibe();
+        setInterval(checkVibe, 5000);
+
+        // Staff name
         const staffInput = document.getElementById('staff-input');
-        const savedName = localStorage.getItem('hj-last-staff');
-        if (savedName && staffInput) staffInput.value = savedName;
+        const noteInput = document.getElementById('note-input');
+        const noteBtn = document.getElementById('note-submit');
+
         if (staffInput) {
+            const saved = localStorage.getItem('hj-last-staff');
+            if (saved) staffInput.value = saved;
             staffInput.addEventListener('blur', () => {
                 if (staffInput.value.trim()) localStorage.setItem('hj-last-staff', staffInput.value.trim());
             });
         }
 
-        // Note submission
-        const noteInput = document.getElementById('note-input');
-        const noteBtn = document.getElementById('note-submit');
+        // Note textarea auto-resize
+        if (noteInput) {
+            noteInput.addEventListener('input', () => {
+                noteInput.style.height = 'auto';
+                noteInput.style.height = Math.min(noteInput.scrollHeight, 100) + 'px';
+            });
+        }
 
+        // Submit note — ONE handler only
         async function submitNote() {
             const text = noteInput ? noteInput.value.trim() : '';
             const staff = staffInput ? staffInput.value.trim() : '';
+
             if (!text) return;
+
             if (!staff) {
                 if (staffInput) {
-                    staffInput.style.borderColor = 'var(--alert)';
+                    staffInput.style.borderColor = '#E11D48';
                     staffInput.placeholder = 'Enter your name first…';
                     staffInput.focus();
                     setTimeout(() => { staffInput.style.borderColor = ''; staffInput.placeholder = 'Your name…'; }, 2000);
                 }
                 return;
             }
+
             localStorage.setItem('hj-last-staff', staff);
             if (noteBtn) { noteBtn.disabled = true; noteBtn.innerText = '…'; }
+
             try {
-                await addEntry(text, staff);
+                await addDoc(collection(db, 'handover'), {
+                    ts: Date.now(),
+                    text: text,
+                    staff: staff,
+                    completed: false
+                });
                 if (noteInput) { noteInput.value = ''; noteInput.style.height = 'auto'; }
             } catch(e) {
-                console.error('Note save failed:', e);
-                // Show error to user
-                if (noteBtn) {
-                    noteBtn.style.background = 'var(--alert)';
-                    noteBtn.innerText = '!';
-                    setTimeout(() => { noteBtn.style.background = ''; noteBtn.innerText = '＋'; }, 3000);
-                }
-                // Show error message below log
-                const errDiv = document.createElement('div');
-                errDiv.style.cssText = 'padding:10px 16px;font-size:11px;color:var(--alert);letter-spacing:1px;text-align:center;';
-                errDiv.innerText = 'Could not save — check Firebase rules (allow read, write: if true)';
-                const footer = document.getElementById('log-entries');
-                if (footer) footer.after(errDiv);
-                setTimeout(() => errDiv.remove(), 6000);
+                console.error('Failed to save note:', e);
+                alert('Could not save note. Check your connection.');
             }
+
             if (noteBtn) { noteBtn.disabled = false; noteBtn.innerText = '＋'; }
         }
 
+        if (noteBtn) noteBtn.addEventListener('click', submitNote);
         if (noteInput) {
-            noteInput.addEventListener('input', () => {
-                noteInput.style.height = 'auto';
-                noteInput.style.height = Math.min(noteInput.scrollHeight, 100) + 'px';
-            });
-            noteInput.addEventListener('keydown', (e) => {
+            noteInput.addEventListener('keydown', e => {
                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitNote(); }
             });
         }
 
-        if (noteBtn) noteBtn.addEventListener('click', submitNote);
-
+        // Clear log
         const clearBtn = document.getElementById('clear-log-btn');
-        if (clearBtn) clearBtn.addEventListener('click', clearLog);
+        if (clearBtn) {
+            clearBtn.addEventListener('click', async () => {
+                if (confirm('Clear all handover entries?')) {
+                    const snap = await getDocs(query(collection(db, 'handover')));
+                    snap.forEach(async d => await deleteDoc(d.ref));
+                }
+            });
+        }
 
-        // Test button
+        // Test vibe button
         const testBtn = document.getElementById('test-btn');
         if (testBtn) {
-            testBtn.addEventListener('click', () => {
-                isTesting = !isTesting;
-                checkVibe();
-            });
+            testBtn.addEventListener('click', () => { isTesting = !isTesting; checkVibe(); });
         }
     });
 </script>

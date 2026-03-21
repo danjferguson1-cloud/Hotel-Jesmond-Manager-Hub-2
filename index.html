@@ -784,7 +784,7 @@
 <!-- Firebase -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, addDoc, deleteDoc, updateDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc, updateDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyC1-n25spgY3epta_ANquA9Gm0Ppo7ttsY",
@@ -798,22 +798,20 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // ===== ALERT SYSTEM =====
-    const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
-    alertSound.volume = 1.0;
+    const tasks = ['safe', 'cellar', 'vibe', 'sec', 'safe2'];
     let hasNotifiedToday = false;
     let isTesting = false;
     let lastRepeatMinute = -1;
 
-    const tasks = ['safe', 'cellar', 'vibe', 'sec', 'safe2'];
+    const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
+    alertSound.volume = 1.0;
+
+    // ===== HELPERS =====
+    const todayKey = () => new Date().toISOString().split('T')[0];
 
     function flashScreen() {
         const flash = document.createElement('div');
-        flash.style.cssText = `
-            position: fixed; inset: 0; background: #E11D48;
-            z-index: 99998; pointer-events: none;
-            animation: screenFlash 0.6s ease forwards;
-        `;
+        flash.style.cssText = 'position:fixed;inset:0;background:#E11D48;z-index:99998;pointer-events:none;animation:screenFlash 0.6s ease forwards;';
         document.body.appendChild(flash);
         setTimeout(() => flash.remove(), 600);
     }
@@ -822,10 +820,7 @@
         alertSound.currentTime = 0;
         alertSound.play().catch(() => {});
         if (Notification.permission === "granted") {
-            new Notification("🚨 Hotel Jesmond: Vibe Check!", {
-                body: "Time to adjust lights and audio! Tap to open.",
-                requireInteraction: true,
-            });
+            new Notification("🚨 Hotel Jesmond: Vibe Check!", { body: "Time to adjust lights and audio!", requireInteraction: true });
         }
         if ("vibrate" in navigator) navigator.vibrate([300, 100, 300, 100, 300, 200, 500]);
         flashScreen();
@@ -833,27 +828,33 @@
         setTimeout(flashScreen, 1600);
     }
 
+    // ===== PROGRESS BAR =====
     function updateProgress() {
-        const done = tasks.filter(k => document.getElementById('c-' + k).checked).length;
+        const done = tasks.filter(k => {
+            const el = document.getElementById('c-' + k);
+            return el && el.checked;
+        }).length;
         const pct = (done / tasks.length) * 100;
-        document.getElementById('progress-fill').style.width = pct + '%';
-        document.getElementById('progress-pct').textContent = done + ' / ' + tasks.length;
+        const fill = document.getElementById('progress-fill');
+        const pctEl = document.getElementById('progress-pct');
+        if (fill) fill.style.width = pct + '%';
+        if (pctEl) pctEl.textContent = done + ' / ' + tasks.length;
     }
 
     function updateTaskStyles() {
         tasks.forEach(k => {
             const row = document.getElementById('row-' + k);
-            const checked = document.getElementById('c-' + k).checked;
-            if (row) row.classList.toggle('done', checked);
+            const el = document.getElementById('c-' + k);
+            if (row && el) row.classList.toggle('done', el.checked);
         });
     }
 
     // ===== FIREBASE CHECKLIST =====
-    const todayKey = () => new Date().toISOString().split('T')[0]; // e.g. "2025-03-13"
-
     async function saveTaskToFirebase(taskKey, checked) {
-        const ref = doc(db, 'checklist', todayKey());
-        await setDoc(ref, { [taskKey]: checked }, { merge: true });
+        try {
+            const ref = doc(db, 'checklist', todayKey());
+            await setDoc(ref, { [taskKey]: checked }, { merge: true });
+        } catch(e) { console.warn('Checklist save failed', e); }
     }
 
     function listenToChecklist() {
@@ -863,50 +864,43 @@
                 const data = snap.data();
                 tasks.forEach(k => {
                     const el = document.getElementById('c-' + k);
-                    if (el && data[k] !== undefined) {
-                        el.checked = data[k];
-                    }
+                    if (el && data[k] !== undefined) el.checked = data[k];
                 });
-                updateProgress();
-                updateTaskStyles();
             }
+            updateProgress();
+            updateTaskStyles();
         });
     }
 
-    // ===== FIREBASE DAILY RESET =====
+    // ===== DAILY RESET =====
     async function checkDailyReset() {
         const now = new Date();
         const today = now.toDateString();
         const lastReset = localStorage.getItem('hj-last-reset');
         if (now.getHours() >= 4 && lastReset !== today) {
-            // Reset all tasks in Firebase for today
-            const ref = doc(db, 'checklist', todayKey());
-            const resetData = {};
-            tasks.forEach(k => resetData[k] = false);
-            await setDoc(ref, resetData);
-            localStorage.setItem('hj-last-reset', today);
+            try {
+                const ref = doc(db, 'checklist', todayKey());
+                const resetData = {};
+                tasks.forEach(k => resetData[k] = false);
+                await setDoc(ref, resetData);
+                localStorage.setItem('hj-last-reset', today);
+            } catch(e) { console.warn('Reset failed', e); }
         }
     }
 
-    // ===== CLOCK (updates every second) =====
-    function updateClock() {
-        const el = document.getElementById('clock');
-        if (el) el.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-
-    // ===== VIBE ALERT =====
-    function update() {
+    // ===== VIBE CHECK =====
+    function checkVibe() {
         const now = new Date();
         const h = now.getHours();
         const m = now.getMinutes();
-        const vibeDone = document.getElementById('c-vibe').checked;
+        const vibeDone = document.getElementById('c-vibe');
         const isVibeTime = (h === 17);
-        const showAlert = isTesting || (isVibeTime && !vibeDone);
-        document.getElementById('alert-top').style.display = showAlert ? 'block' : 'none';
-        document.getElementById('row-vibe').classList.toggle('active-alert', isVibeTime && !vibeDone);
-        if (isVibeTime && !vibeDone) {
+        const showAlert = isTesting || (isVibeTime && vibeDone && !vibeDone.checked);
+        const alertEl = document.getElementById('alert-top');
+        const rowVibe = document.getElementById('row-vibe');
+        if (alertEl) alertEl.style.display = showAlert ? 'block' : 'none';
+        if (rowVibe) rowVibe.classList.toggle('active-alert', isVibeTime && vibeDone && !vibeDone.checked);
+        if (isVibeTime && vibeDone && !vibeDone.checked) {
             const repeatSlot = Math.floor(m / 5);
             if (!hasNotifiedToday || lastRepeatMinute !== repeatSlot) {
                 triggerAlertEffects();
@@ -917,7 +911,7 @@
         if (h !== 17) { hasNotifiedToday = false; lastRepeatMinute = -1; }
     }
 
-    // ===== FIREBASE HANDOVER LOG =====
+    // ===== HANDOVER LOG =====
     function formatLogTime(ts) {
         const d = new Date(ts);
         return {
@@ -929,12 +923,13 @@
     function renderLog(entries) {
         const container = document.getElementById('log-entries');
         const empty = document.getElementById('log-empty');
+        if (!container) return;
         container.querySelectorAll('.log-entry').forEach(e => e.remove());
         if (!entries || entries.length === 0) {
-            empty.style.display = 'block';
+            if (empty) empty.style.display = 'block';
             return;
         }
-        empty.style.display = 'none';
+        if (empty) empty.style.display = 'none';
         [...entries].sort((a, b) => b.ts - a.ts).forEach((entry) => {
             const { time, date } = formatLogTime(entry.ts);
             const staffBadge = entry.staff ? `<div class="log-staff">${entry.staff}</div>` : '';
@@ -979,94 +974,115 @@
     }
 
     async function toggleComplete(id, current) {
-        const ref = doc(db, 'handover', id);
-        await updateDoc(ref, { completed: !current });
+        try { await updateDoc(doc(db, 'handover', id), { completed: !current }); }
+        catch(e) { console.warn('Toggle failed', e); }
     }
 
     async function deleteEntry(id) {
-        await deleteDoc(doc(db, 'handover', id));
+        try { await deleteDoc(doc(db, 'handover', id)); }
+        catch(e) { console.warn('Delete failed', e); }
     }
 
     async function clearLog() {
         if (confirm('Clear all handover entries?')) {
-            const q = query(collection(db, 'handover'));
-            const snap = await getDocs(q);
+            const snap = await getDocs(query(collection(db, 'handover')));
             snap.forEach(async d => await deleteDoc(d.ref));
         }
     }
 
-    // ===== INIT =====
-    window.addEventListener('load', async () => {
+    // ===== INIT — runs after DOM is ready =====
+    window.addEventListener('DOMContentLoaded', async () => {
+
+        // Clock — updates every second
+        function updateClock() {
+            const el = document.getElementById('clock');
+            if (el) el.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Vibe check — runs every 5 seconds
+        checkVibe();
+        setInterval(checkVibe, 5000);
+
+        // Notifications
         if ("Notification" in window) Notification.requestPermission();
 
-        // Set up task checkboxes — save to Firebase on change
+        // Checkboxes
         tasks.forEach(k => {
             const el = document.getElementById('c-' + k);
-            el.addEventListener('change', async (e) => {
-                // Update UI immediately so progress feels instant
+            if (!el) return;
+            el.addEventListener('change', async () => {
                 updateProgress();
                 updateTaskStyles();
-                update();
-                // Then save to Firebase in background
-                try { await saveTaskToFirebase(k, e.target.checked); } catch(err) { console.warn('Firebase save failed', err); }
+                await saveTaskToFirebase(k, el.checked);
             });
         });
 
+        // Firebase listeners
         await checkDailyReset();
         listenToChecklist();
         listenToLog();
-        update();
-        setInterval(() => { checkDailyReset(); update(); }, 5000);
 
-        // Note input
+        // Staff name memory
+        const staffInput = document.getElementById('staff-input');
+        const savedName = localStorage.getItem('hj-last-staff');
+        if (savedName && staffInput) staffInput.value = savedName;
+        if (staffInput) {
+            staffInput.addEventListener('blur', () => {
+                if (staffInput.value.trim()) localStorage.setItem('hj-last-staff', staffInput.value.trim());
+            });
+        }
+
+        // Note submission
         const noteInput = document.getElementById('note-input');
-        noteInput.addEventListener('input', () => {
-            noteInput.style.height = 'auto';
-            noteInput.style.height = Math.min(noteInput.scrollHeight, 100) + 'px';
-        });
-        noteInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                submitNote();
-            }
-        });
+        const noteBtn = document.getElementById('note-submit');
 
         async function submitNote() {
-            const val = noteInput.value;
-            const staffInput = document.getElementById('staff-input');
-            const staff = staffInput.value.trim();
-            if (!val.trim()) return;
+            const text = noteInput ? noteInput.value.trim() : '';
+            const staff = staffInput ? staffInput.value.trim() : '';
+            if (!text) return;
             if (!staff) {
-                staffInput.style.borderColor = 'var(--alert)';
-                staffInput.placeholder = 'Please enter your name first…';
-                staffInput.focus();
-                setTimeout(() => { staffInput.style.borderColor = ''; staffInput.placeholder = 'Your name…'; }, 2000);
+                if (staffInput) {
+                    staffInput.style.borderColor = 'var(--alert)';
+                    staffInput.placeholder = 'Enter your name first…';
+                    staffInput.focus();
+                    setTimeout(() => { staffInput.style.borderColor = ''; staffInput.placeholder = 'Your name…'; }, 2000);
+                }
                 return;
             }
             localStorage.setItem('hj-last-staff', staff);
-            const btn = document.getElementById('note-submit');
-            btn.disabled = true;
-            btn.innerText = '…';
+            if (noteBtn) { noteBtn.disabled = true; noteBtn.innerText = '…'; }
             try {
-                await addEntry(val, staff);
-                noteInput.value = '';
-                noteInput.style.height = 'auto';
-            } catch(err) {
-                console.warn('Failed to save note', err);
-            }
-            btn.disabled = false;
-            btn.innerText = '＋';
+                await addEntry(text, staff);
+                if (noteInput) { noteInput.value = ''; noteInput.style.height = 'auto'; }
+            } catch(e) { console.warn('Note save failed', e); }
+            if (noteBtn) { noteBtn.disabled = false; noteBtn.innerText = '＋'; }
         }
 
-        document.getElementById('note-submit').addEventListener('click', submitNote);
-        document.getElementById('clear-log-btn').addEventListener('click', clearLog);
+        if (noteInput) {
+            noteInput.addEventListener('input', () => {
+                noteInput.style.height = 'auto';
+                noteInput.style.height = Math.min(noteInput.scrollHeight, 100) + 'px';
+            });
+            noteInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitNote(); }
+            });
+        }
 
-        const lastStaff = localStorage.getItem('hj-last-staff');
-        if (lastStaff) document.getElementById('staff-input').value = lastStaff;
+        if (noteBtn) noteBtn.addEventListener('click', submitNote);
 
-        document.getElementById('staff-input').addEventListener('blur', function() {
-            if (this.value.trim()) localStorage.setItem('hj-last-staff', this.value.trim());
-        });
+        const clearBtn = document.getElementById('clear-log-btn');
+        if (clearBtn) clearBtn.addEventListener('click', clearLog);
+
+        // Test button
+        const testBtn = document.getElementById('test-btn');
+        if (testBtn) {
+            testBtn.addEventListener('click', () => {
+                isTesting = !isTesting;
+                checkVibe();
+            });
+        }
     });
 </script>
 ```

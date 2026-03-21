@@ -955,9 +955,14 @@
         });
     }
 
+    let logListenerActive = false;
     function listenToLog() {
+        if (logListenerActive) return;
+        logListenerActive = true;
         const q = query(collection(db, 'handover'), orderBy('ts', 'desc'));
         onSnapshot(q, (snap) => {
+            // Skip snapshots that only contain local pending writes
+            if (snap.metadata.hasPendingWrites && snap.docChanges().every(c => c.type === 'added' && c.doc.metadata.hasPendingWrites)) return;
             const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderLog(entries);
         });

@@ -768,7 +768,7 @@
                     <input type="text" id="staff-input" placeholder="Your name…" autocomplete="name" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:10px; color:var(--off-white); font-family:'DM Mono',monospace; font-size:11px; padding:8px 12px; outline:none; width:100%; transition: border-color 0.2s;" />
                     <textarea id="note-input" placeholder="Add a handover note…" rows="1"></textarea>
                 </div>
-                <button id="note-submit">＋</button>
+                <button id="note-submit" onclick="window._submitNote()">＋</button>
             </div>
             <div class="log-entries" id="log-entries">
                 <div class="log-empty" id="log-empty">No entries yet — add your first note above.</div>
@@ -990,8 +990,43 @@
         }
     }
 
+    // ===== GLOBAL submit function so inline onclick works =====
+    window._submitNote = async function() {
+        const noteInput = document.getElementById('note-input');
+        const staffInput = document.getElementById('staff-input');
+        const noteBtn = document.getElementById('note-submit');
+        const text = noteInput ? noteInput.value.trim() : '';
+        const staff = staffInput ? staffInput.value.trim() : '';
+        if (!text) return;
+        if (!staff) {
+            if (staffInput) {
+                staffInput.style.borderColor = '#E11D48';
+                staffInput.placeholder = 'Enter your name first…';
+                staffInput.focus();
+                setTimeout(() => { staffInput.style.borderColor = ''; staffInput.placeholder = 'Your name…'; }, 2000);
+            }
+            return;
+        }
+        localStorage.setItem('hj-last-staff', staff);
+        if (noteBtn) { noteBtn.disabled = true; noteBtn.innerText = '…'; }
+        try {
+            await addDoc(collection(db, 'handover'), {
+                ts: Date.now(),
+                text: text,
+                staff: staff,
+                completed: false
+            });
+            if (noteInput) { noteInput.value = ''; noteInput.style.height = 'auto'; }
+        } catch(e) {
+            console.error('Save failed:', e);
+            if (noteBtn) { noteBtn.style.background = '#E11D48'; noteBtn.innerText = '!'; }
+            setTimeout(() => { if (noteBtn) { noteBtn.style.background = ''; noteBtn.innerText = '＋'; } }, 3000);
+        }
+        if (noteBtn) { noteBtn.disabled = false; noteBtn.innerText = '＋'; }
+    };
+
     // ===== INIT — runs after DOM is ready =====
-    window.addEventListener('DOMContentLoaded', async () => {
+    window.addEventListener('load', async () => {
 
         // Clock — updates every second
         function updateClock() {

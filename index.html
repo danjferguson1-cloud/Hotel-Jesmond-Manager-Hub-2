@@ -888,13 +888,19 @@
         }
     }
 
-    // ===== CLOCK & VIBE ALERT =====
+    // ===== CLOCK (updates every second) =====
+    function updateClock() {
+        const el = document.getElementById('clock');
+        if (el) el.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
 
+    // ===== VIBE ALERT =====
     function update() {
         const now = new Date();
         const h = now.getHours();
         const m = now.getMinutes();
-        document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
         const vibeDone = document.getElementById('c-vibe').checked;
         const isVibeTime = (h === 17);
         const showAlert = isTesting || (isVibeTime && !vibeDone);
@@ -997,10 +1003,12 @@
         tasks.forEach(k => {
             const el = document.getElementById('c-' + k);
             el.addEventListener('change', async (e) => {
-                await saveTaskToFirebase(k, e.target.checked);
+                // Update UI immediately so progress feels instant
                 updateProgress();
                 updateTaskStyles();
                 update();
+                // Then save to Firebase in background
+                try { await saveTaskToFirebase(k, e.target.checked); } catch(err) { console.warn('Firebase save failed', err); }
             });
         });
 
@@ -1025,12 +1033,29 @@
 
         async function submitNote() {
             const val = noteInput.value;
-            const staff = document.getElementById('staff-input').value;
+            const staffInput = document.getElementById('staff-input');
+            const staff = staffInput.value.trim();
             if (!val.trim()) return;
-            if (staff.trim()) localStorage.setItem('hj-last-staff', staff.trim());
-            await addEntry(val, staff);
-            noteInput.value = '';
-            noteInput.style.height = 'auto';
+            if (!staff) {
+                staffInput.style.borderColor = 'var(--alert)';
+                staffInput.placeholder = 'Please enter your name first…';
+                staffInput.focus();
+                setTimeout(() => { staffInput.style.borderColor = ''; staffInput.placeholder = 'Your name…'; }, 2000);
+                return;
+            }
+            localStorage.setItem('hj-last-staff', staff);
+            const btn = document.getElementById('note-submit');
+            btn.disabled = true;
+            btn.innerText = '…';
+            try {
+                await addEntry(val, staff);
+                noteInput.value = '';
+                noteInput.style.height = 'auto';
+            } catch(err) {
+                console.warn('Failed to save note', err);
+            }
+            btn.disabled = false;
+            btn.innerText = '＋';
         }
 
         document.getElementById('note-submit').addEventListener('click', submitNote);
